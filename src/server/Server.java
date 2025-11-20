@@ -15,7 +15,7 @@ public class Server {
     private final ServerSocket socket;
     private final List<ClientHandlerThread> clients = new ArrayList<>();
 
-    private static final AuthenticationHandler authHandler = new AuthenticationHandler();
+    public static final AuthenticationHandler authHandler = new AuthenticationHandler();
 
     public Server(int port){
         try {
@@ -24,6 +24,8 @@ public class Server {
             throw new RuntimeException(e);
         }
     }
+
+    // Implementar a classe Connection
     public void run(){
         while(true){
             try {
@@ -39,7 +41,5 @@ public class Server {
             }
         }
     }
-
-    public static void handleAuthentication(Packet p){ authHandler.handle(p); }
 
 }

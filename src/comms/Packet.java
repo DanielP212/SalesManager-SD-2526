@@ -2,19 +2,18 @@ package comms;
 
 import comms.common.Encodable;
 import comms.common.PacketHeader;
-import comms.common.RequestType;
+import comms.common.PacketType;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class Packet extends Encodable {
     private PacketHeader header;
     private static int ID_COUNTER = 0;
     private final int dataSize;
-    private byte[] data;
+    private final byte[] data;
 
-    public Packet(int clientID, RequestType type, byte[] data){
+    public Packet(int clientID, PacketType type, byte[] data){
         super();
         int packetID = (int)(clientID*(Math.pow(10, (int)(clientID/10) + 1))) + ID_COUNTER++;
 
@@ -23,20 +22,34 @@ public class Packet extends Encodable {
         this.header = new PacketHeader(dataSize, packetID, clientID, type);
         header.setBufferOut(bufferOut);
         header.setDataOut(dataOut);
-        /*
-        ByteBuffer buffer = ByteBuffer.wrap(data);
-        int size = buffer.getInt();
-        for (int i = 0; i < size; i++){
-            System.out.println(buffer.getChar());
-        }
-         */
     }
+
+    // Constructor para criar um pacote de resposta a um pacote de request
+    public Packet(Packet rp, byte[] data){
+        super();
+        this.dataSize = data.length;
+        this.data = data;
+        this.header = new PacketHeader(dataSize, rp.getID(), rp.getClientID(), rp.getType());
+        header.setBufferOut(bufferOut);
+        header.setDataOut(dataOut);
+    }
+
 
     // Construtor para reconstruir um pacote a partir de um byteBuffer
     public Packet(int packetSize, byte[] buffer){
         super(buffer); // mete os dados do array no bufferIn e cria dataIn
         this.header = new PacketHeader(packetSize, dataIn);
         dataSize = buffer.length - this.header.headerSize();
+        try {
+            this.data = new byte[dataSize];
+            int bytesRead = dataIn.read(this.data, 0, dataSize);
+            if (bytesRead != dataSize){
+                System.out.println("[PACKET DECODING] Read different number of bytes than expected!" +
+                        " Are you sure this is intended?");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -54,6 +67,8 @@ public class Packet extends Encodable {
     public String toString() {
         return "Packet{" +
                 "header=" + header +
+                ", dataSize=" + dataSize +
+                ", data=" + Arrays.toString(data) +
                 '}';
     }
 
@@ -62,12 +77,10 @@ public class Packet extends Encodable {
     }
 
     public byte[] getData(){
-        byte[] data = new byte[dataSize];
-        bufferIn.read(data, header.headerSize(), header.headerSize() + dataSize);
         return data;
     }
 
-    public RequestType getType(){ return header.getType(); }
+    public PacketType getType(){ return header.getType(); }
     public int getID(){ return header.getID(); }
     public int getClientID(){ return header.getClientID(); }
 

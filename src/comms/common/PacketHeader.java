@@ -9,10 +9,10 @@ public class PacketHeader extends Encodable{
     private int packetSize; // apenas set quando construido apartir de buffer
     private int packetID;
     private int clientID;
-    private RequestType type;
+    private PacketType type;
 
 
-    public PacketHeader(int dataSize, int packetID, int clientID, RequestType type){
+    public PacketHeader(int dataSize, int packetID, int clientID, PacketType type){
         this.packetSize = this.headerSize() + dataSize; // not set yet
         this.packetID = packetID;
         this.clientID = clientID;
@@ -24,7 +24,7 @@ public class PacketHeader extends Encodable{
             this.packetSize = packetSize;
             this.packetID = dataIn.readInt();
             this.clientID = dataIn.readInt();
-            this.type = RequestType.fromByte(dataIn.readByte());
+            this.type = PacketType.fromByte(dataIn.readByte());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -46,7 +46,7 @@ public class PacketHeader extends Encodable{
 
     public int getID(){ return packetID; }
     public int getClientID(){ return clientID; }
-    public RequestType getType(){ return type; }
+    public PacketType getType(){ return type; }
     public int headerSize(){ return 4 + 4 + 4 + 1; } // packetSize, packetID, clientID, type
     public int packetSize(){ return packetSize; }
     public void setBufferOut(ByteArrayOutputStream out){ this.bufferOut = out; }
@@ -55,10 +55,10 @@ public class PacketHeader extends Encodable{
     @Override
     public String toString() {
         return "PacketHeader{" +
-                "packetID=" + packetID +
+                "packetSize=" + packetSize +
+                ", packetID=" + packetID +
                 ", clientID=" + clientID +
                 ", type=" + type +
                 '}';
     }
-
 }

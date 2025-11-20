@@ -4,7 +4,6 @@ import comms.Packet;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
 
 public class ClientHandlerThread extends Thread{
     Socket socket;

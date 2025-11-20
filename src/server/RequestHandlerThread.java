@@ -1,15 +1,14 @@
 package server;
 
 import comms.Packet;
-import comms.common.RequestType;
+import comms.common.PacketType;
+import server.requests.LoginRequest;
+import server.requests.Request;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 
-// TODO Ler o comentario
-// Temos a opcao de fazer esta classe de uma classe parente e fazer uma classe filha especifica para cada tipo de request.
-// Ou fazer tudo nesta classe
-// Como preferirem
-public class RequestHandlerThread extends Thread{
+public class RequestHandlerThread extends Thread {
     DataOutputStream out;
     Packet receivedPacket;
 
@@ -19,9 +18,26 @@ public class RequestHandlerThread extends Thread{
     }
 
     public void run(){
-        // Do shit
-        RequestType type = receivedPacket.getType();
-        if (type == RequestType.AUTH){
+        PacketType type = receivedPacket.getType();
+        Request req;
+        req = switch(type){
+            case LOGIN -> new LoginRequest(receivedPacket.getData());
+            case null, default -> null;
+        };
+        if (req == null){
+            System.out.println("[REQUEST HANDLER] Invalid request type found!" +
+                    " How did we get here?");
+            return;
+        }
+        byte[] requestData = req.execute();
+        Packet answerPacket = new Packet(receivedPacket, requestData);
+        try {
+            // TODO NECESSITA DE LOCKS SEUS MACACOS
+            out.write(answerPacket.getBytes());
+            out.flush();
+            System.out.println("Answer to packet: " + answerPacket.toString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
