@@ -1,16 +1,15 @@
 package client;
 
 import comms.Packet;
-import server.RequestHandlerThread;
 import server.requests.Request;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class RequestAnswerHandler extends Thread{
+public class AnswerHandlerThread extends Thread{
     DataInputStream in;
 
-    public RequestAnswerHandler(DataInputStream in){
+    public AnswerHandlerThread(DataInputStream in){
         this.in = in;
     }
 
@@ -25,9 +24,13 @@ public class RequestAnswerHandler extends Thread{
                     continue;
                 }
                 Packet received = new Packet(packetSize, buf);
-                System.out.println("Received: " + received.toString());
+                //System.out.println("Received: " + received.toString());
                 Request reqAnswer = Request.fromPacket(received);
-                if (reqAnswer == null) continue;
+                if (reqAnswer == null){
+                    System.out.println("Null packet. How did we get here?");
+                    return;
+                };
+
                 System.out.println("[ANSWER " + received.getID() + "] " + reqAnswer.getAnswer());
             }
         } catch (IOException e) {

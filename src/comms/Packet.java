@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class Packet extends Encodable {
     private PacketHeader header;
-    private static int ID_COUNTER = 0;
+    private static int ID_COUNTER = 1;
     private final int dataSize;
     private final byte[] data;
 

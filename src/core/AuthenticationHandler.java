@@ -9,13 +9,11 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AuthenticationHandler {
     private final HashMap<String, User> registeredUsers = new HashMap<>();
 
+    // ClientID, User logged in
+    private final HashMap<Integer, User> loggedInUsers = new HashMap<>();
+
     private final Lock readLock = new ReentrantLock();
     private final Lock writeLock = new ReentrantLock();
-
-
-    public void handle(Packet packet){
-
-    }
 
     public boolean userExists(String username){
         readLock.lock();
@@ -26,16 +24,25 @@ public class AuthenticationHandler {
         }
     }
 
-    public void registerUser(String username, String password){
-        if (userExists(username)) return;
+    public boolean registerUser(String username, String password){
+        if (userExists(username)) return false;
         writeLock.lock();
-        registeredUsers.put(username, new User(username, password));
-        writeLock.unlock();
+        try{
+            registeredUsers.put(username, new User(username, password));
+            return true;
+        } finally {
+            writeLock.unlock();
+        }
     }
 
-    public boolean loginUser(String username, String password){
+    public boolean loginUser(int clientID, String username, String password){
         User u = getUser(username);
-        return u != null && u.attemptPassword(password);
+        boolean loggedIn = u != null && u.attemptPassword(password);
+        if (loggedIn){
+            loggedInUsers.put(clientID, u);
+            return true;
+        }
+        return false;
     }
 
     public User getUser(String username){
@@ -45,5 +52,9 @@ public class AuthenticationHandler {
         } finally {
             readLock.unlock();
         }
+    }
+
+    public boolean isClientLoggedIn(int requesterClient) {
+        return loggedInUsers.containsKey(requesterClient);
     }
 }

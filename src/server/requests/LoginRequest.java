@@ -9,27 +9,20 @@ import java.nio.ByteBuffer;
 public class LoginRequest extends Request {
     private final ByteBuffer buffer;
 
-    public LoginRequest(byte[] data){
+    protected LoginRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
     }
 
     @Override
     public byte[] execute() {
-        int usernameSize = buffer.get();
-        StringBuilder uBuilder = new StringBuilder();
-        for (int i = 0; i < usernameSize; i++) {
-            uBuilder.append((char)buffer.get());
+        if (requesterClient == -1) return null;
+        if(Server.authHandler.isClientLoggedIn(requesterClient)){
+            return new byte[]{0x02};
         }
-        String username = uBuilder.toString();
 
-        int passwordSize = buffer.get();
-        StringBuilder pBuilder = new StringBuilder();
-        for (int i = 0; i < passwordSize; i++) {
-            pBuilder.append((char)buffer.get());
-        }
-        String password = pBuilder.toString();
-
-        boolean userLoggedIn = Server.authHandler.loginUser(username, password);
+        String username = getString(buffer);
+        String password = getString(buffer);
+        boolean userLoggedIn = Server.authHandler.loginUser(requesterClient, username, password);
 
         if (userLoggedIn) return new byte[]{0x01};
         else return new byte[]{0x00};
@@ -37,8 +30,13 @@ public class LoginRequest extends Request {
 
     @Override
     public String getAnswer() {
+        if (requesterClient != -1) return ""; // Se for -1 'e um packet de Answer
         byte successfulLogin = buffer.get();
-        return (successfulLogin == 0x01) ? "Welcome~" : "Invalid user";
+        return switch (successfulLogin){
+            case 0x01 -> "Welcome~";
+            case 0x02 -> "Already Logged in as a User!";
+            default -> "Invalid User!";
+        };
     }
 
 }
