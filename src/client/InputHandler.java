@@ -8,6 +8,7 @@ import java.util.Arrays;
 public class InputHandler {
 
     // TODO Adicionar mais coisas
+    // TODO interface para o cliente
     private static PacketType findType(String msg){
         msg = msg.toUpperCase().trim();
         //System.out.println(msg);

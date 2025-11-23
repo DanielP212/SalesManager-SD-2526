@@ -1,6 +1,6 @@
 package server;
 
-import core.AuthenticationHandler;
+import core.AuthenticationManager;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,7 +14,7 @@ public class Server {
     private final ServerSocket socket;
     private static final List<ClientHandlerThread> aliveClients = new ArrayList<>();
 
-    public static final AuthenticationHandler authHandler = new AuthenticationHandler();
+    public static final AuthenticationManager authHandler = new AuthenticationManager();
 
     public Server(int port){
         try {

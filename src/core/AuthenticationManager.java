@@ -1,12 +1,10 @@
 package core;
 
-import comms.Packet;
-
 import java.util.HashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class AuthenticationHandler {
+public class AuthenticationManager {
     private final HashMap<String, User> registeredUsers = new HashMap<>();
 
     // ClientID, User logged in

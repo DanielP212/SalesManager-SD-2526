@@ -1,11 +1,13 @@
 package server.requests;
 
 import comms.Packet;
+import comms.common.PacketType;
 
 import java.nio.ByteBuffer;
 
 public abstract class Request {
     protected int requesterClient;
+    protected PacketType type;
 
 
     /**
@@ -25,6 +27,7 @@ public abstract class Request {
         };
         if (req == null) return null;
         req.requesterClient = -1;
+        req.type = p.getType();
         return req;
     }
 
@@ -42,6 +45,10 @@ public abstract class Request {
         for (int i = 0; i < stringSize; i++)
             sBuilder.append((char)buffer.get());
         return sBuilder.toString();
+    }
+
+    public static byte getByte(ByteBuffer buffer){
+        return buffer.get();
     }
 
     public static int getInt(ByteBuffer buffer){

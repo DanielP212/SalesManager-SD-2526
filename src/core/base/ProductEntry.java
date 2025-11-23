@@ -1,9 +1,9 @@
-package core;
+package core.base;
 
 import java.time.LocalDate;
 import java.util.*;
 
-public class ProductEntry {
+public class ProductEntry implements Cloneable{
     private final int productID;
     private final LocalDate sellDate;
     private final List<Float> sellPrices;
@@ -34,19 +34,21 @@ public class ProductEntry {
         return productID == that.productID && Objects.equals(sellDate, that.sellDate);
     }
 
-    // TODO acabar isto
     protected ProductEntry clone() {
         return new ProductEntry(this);
     }
 
+    public float getTotal(){
+        return (float) sellPrices.stream().mapToDouble(Float::doubleValue).sum();
+    }
+    public float getHighestPrice(){ return Collections.max(sellPrices); }
+    public float getMedianPrice(){ return (float) (sellPrices.stream().mapToDouble(Float::doubleValue).sum() / getQuantitySold()); }
     public int getQuantitySold(){ return sellPrices.size(); }
 
     public int getProductID(){ return productID; }
     public LocalDate getSellDate(){ return sellDate; }
 
-    public float getHighestPrice(){ return Collections.max(sellPrices); }
 
-    public float getMedianPrice(){ return (float) (sellPrices.stream().mapToDouble(Float::doubleValue).sum() / getQuantitySold()); }
     public List<Float> getSellPrices(){ return sellPrices; }
     public void addSellPrice(float newPrice){ sellPrices.add(newPrice); }
 }

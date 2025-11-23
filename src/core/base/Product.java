@@ -1,6 +1,4 @@
-package core;
-
-import java.util.Date;
+package core.base;
 
 public class Product {
     private static int ID_COUNTER = 1;
