@@ -2,6 +2,7 @@ package core.base;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -12,8 +13,21 @@ public class WorkDay {
     private final Map<Integer, ProductEntry> workdayEntries = new HashMap<>();
     private final ReadWriteLock productLock = new ReentrantReadWriteLock();
 
+    private final AtomicInteger activeReaders = new AtomicInteger(0);
     // Se o dia ja acabou
     boolean closed = false;
+
+    public void startProcessing() {
+        activeReaders.incrementAndGet();
+    }
+
+    public void endProcessing() {
+        activeReaders.decrementAndGet();
+    }
+
+    public boolean isBeingProcessed() {
+        return activeReaders.get() > 0;
+    }
 
     public WorkDay(LocalDate date){ this.date = date; }
 

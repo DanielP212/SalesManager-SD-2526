@@ -25,7 +25,7 @@ public class QueryRequest extends Request{
             int soldQtd = 0;
             try {
                 System.out.println("num days " + numDays + " id " + productID);
-                soldQtd = SalesManager.getSoldQuantity2(numDays, productID);
+                soldQtd = SalesManager.getSoldQuantity(numDays, productID);
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
