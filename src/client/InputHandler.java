@@ -15,6 +15,7 @@ public class InputHandler {
         return switch (msg){
             case "LOGIN" -> PacketType.LOGIN;
             case "REGISTER" -> PacketType.REGISTER;
+            case "QUERY_QTD" -> PacketType.QUERY_QTD;
             case null, default -> null;
         };
     }

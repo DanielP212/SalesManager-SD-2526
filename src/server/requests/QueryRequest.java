@@ -4,6 +4,7 @@ import comms.common.Encodable;
 import comms.common.PacketType;
 import core.SalesManager;
 
+import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
 public class QueryRequest extends Request{
@@ -21,7 +22,13 @@ public class QueryRequest extends Request{
         int numDays = getInt(buffer);
         byte[] result = new byte[4];
         if (type == PacketType.QUERY_QTD){
-            int soldQtd = SalesManager.getSoldQuantity(numDays, productID);
+            int soldQtd = 0;
+            try {
+                System.out.println("num days " + numDays + " id " + productID);
+                soldQtd = SalesManager.getSoldQuantity2(numDays, productID);
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             Encodable.writeIntBytes(result, 0, soldQtd);
         } else if (type == PacketType.QUERY_TOTAL){
             float totalMoney = SalesManager.getTotalMoney(numDays, productID);

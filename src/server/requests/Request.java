@@ -23,6 +23,7 @@ public abstract class Request {
         Request req = switch (p.getType()){
             case LOGIN -> new LoginRequest(p.getData());
             case REGISTER -> new RegisterRequest(p.getData());
+            case QUERY_QTD -> new QueryRequest(p.getData());
             case null, default -> null;
         };
         if (req == null) return null;

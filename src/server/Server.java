@@ -1,6 +1,7 @@
 package server;
 
 import core.AuthenticationManager;
+import core.SalesManager;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,10 +17,11 @@ public class Server {
 
     public static final AuthenticationManager authHandler = new AuthenticationManager();
 
-    public Server(int port){
+    public Server(int port, int s, int d){
         try {
             socket = new ServerSocket(12345);
             init();
+            SalesManager salesManager = new SalesManager(s, d);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

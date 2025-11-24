@@ -14,6 +14,12 @@ public class ProductEntry implements Cloneable{
         this.sellPrices = new ArrayList<>();
     }
 
+    public ProductEntry(int id, LocalDate d){
+        this.sellDate = d;
+        this.productID = id;
+        this.sellPrices = new ArrayList<>();
+    }
+
     public ProductEntry(Product p, float sellPrice, LocalDate d){
         this.sellDate = d;
         this.productID = p.getId();
@@ -43,7 +49,9 @@ public class ProductEntry implements Cloneable{
     }
     public float getHighestPrice(){ return Collections.max(sellPrices); }
     public float getMedianPrice(){ return (float) (sellPrices.stream().mapToDouble(Float::doubleValue).sum() / getQuantitySold()); }
-    public int getQuantitySold(){ return sellPrices.size(); }
+    public int getQuantitySold(){
+        System.out.println(sellPrices.size());
+        return sellPrices.size(); }
 
     public int getProductID(){ return productID; }
     public LocalDate getSellDate(){ return sellDate; }

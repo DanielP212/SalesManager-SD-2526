@@ -42,6 +42,22 @@ public class WorkDay {
         }
     }
 
+    public void loadEventDisk(int id, int qtd, float price){
+        productLock.writeLock().lock();
+        try{
+            ProductEntry productEntry = workdayEntries.get(id);
+            if(productEntry == null){
+                productEntry = new ProductEntry(id, date);
+            }
+            for(int i = 0 ; i < qtd ; i++){
+                productEntry.addSellPrice(price);
+            }
+            workdayEntries.put(id,productEntry);
+        }finally {
+            productLock.writeLock().unlock();
+        }
+    }
+
     public int getSoldQuantity(int productID){
         ProductEntry entry = getEntryToRead(productID);
         if (entry == null) return -1;
