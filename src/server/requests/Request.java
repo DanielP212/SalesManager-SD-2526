@@ -23,8 +23,10 @@ public abstract class Request {
         Request req = switch (p.getType()){
             case LOGIN -> new LoginRequest(p.getData());
             case REGISTER -> new RegisterRequest(p.getData());
-            case QUERY_QTD -> new QueryRequest(p.getData());
-            case null, default -> null;
+            case QUERY_QTD, QUERY_TOTAL, QUERY_MAX, QUERY_MEDIAN -> new QueryRequest(p.getData());
+            case ADD_SALE -> new AddSaleRequest(p.getData());
+            case CREATE_PRODUCT -> new CreateProductRequest(p.getData());
+            case null -> null;
         };
         if (req == null) return null;
         req.requesterClient = -1;
@@ -42,6 +44,7 @@ public abstract class Request {
     // Funcao para receber uma string do buffer
     public static String getString(ByteBuffer buffer){
         int stringSize = buffer.get();
+        if (stringSize <= 0) return null;
         StringBuilder sBuilder = new StringBuilder();
         for (int i = 0; i < stringSize; i++)
             sBuilder.append((char)buffer.get());
@@ -55,10 +58,22 @@ public abstract class Request {
     public static int getInt(ByteBuffer buffer){
         String maybeInt = getString(buffer);
         try{
+            assert maybeInt != null;
             return Integer.parseInt(maybeInt);
         } catch (NumberFormatException e) {
-            System.out.println("[REQUEST FORMATING] Error parsing int");
+            System.out.println("[REQUEST FORMATING] Error parsing int: " + maybeInt);
             throw new RuntimeException(e);
+        }
+    }
+
+    public static float getFloat(ByteBuffer buffer){
+        String maybeFloat = getString(buffer);
+        try{
+            return Float.parseFloat(maybeFloat);
+        } catch (NumberFormatException e){
+            System.out.println("[REQUEST FORMATING] Error parsing float");
+            throw new RuntimeException(e);
+
         }
     }
 

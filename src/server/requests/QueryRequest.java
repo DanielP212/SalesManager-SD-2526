@@ -14,7 +14,7 @@ public class QueryRequest extends Request{
         this.buffer = ByteBuffer.wrap(data);
     }
 
-    // TODO request ainda nao testado
+    // TODO request ainda nao foi tudo testado
     @Override
     public byte[] execute(){
         if (requesterClient == -1) return null;

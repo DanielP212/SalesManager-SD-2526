@@ -16,12 +16,13 @@ public class Server {
     private static final List<ClientHandlerThread> aliveClients = new ArrayList<>();
 
     public static final AuthenticationManager authHandler = new AuthenticationManager();
+    private SalesManager salesManager;
 
     public Server(int port, int s, int d){
         try {
             socket = new ServerSocket(12345);
+            this.salesManager = new SalesManager(s, d);
             init();
-            SalesManager salesManager = new SalesManager(s, d);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -46,6 +47,10 @@ public class Server {
     // Inicializacao das coisas para testes
     public void init(){
         authHandler.registerUser("mamaco", "preto");
+        SalesManager.createProduct("A", 15.0f);
+        SalesManager.createProduct("B", 15.0f);
+        SalesManager.createProduct("C", 15.0f);
+        SalesManager.createProduct("D", 15.0f);
     }
 
     public static void stopTracking(ClientHandlerThread c){

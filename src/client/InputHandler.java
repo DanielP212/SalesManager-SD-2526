@@ -16,6 +16,8 @@ public class InputHandler {
             case "LOGIN" -> PacketType.LOGIN;
             case "REGISTER" -> PacketType.REGISTER;
             case "QUERY_QTD" -> PacketType.QUERY_QTD;
+            case "ADD_SALE" -> PacketType.ADD_SALE;
+            case "CREATE" -> PacketType.CREATE_PRODUCT;
             case null, default -> null;
         };
     }

@@ -35,6 +35,14 @@ public abstract class Encodable {
         buffer[offset + 3] = (byte)(toWrite);
     }
 
+    // retorna o novo offset
+    public static int writeString(byte[] buffer, int offset, String toWrite){
+        int stringSize = toWrite.length();
+        buffer[offset++] = (byte)stringSize;
+        for (int i = 0; i < stringSize; i++) buffer[offset++] = (byte)toWrite.charAt(i);
+        return offset;
+    }
+
     private void writePacketSize(byte[] buffer,int size){
         writeIntBytes(buffer, 0, size);
     }
@@ -48,4 +56,5 @@ public abstract class Encodable {
         writePacketSize(data, data.length);
         return data;
     }
+
 }

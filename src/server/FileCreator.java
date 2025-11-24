@@ -50,8 +50,8 @@ public class FileCreator {
             createFile(targetDate, random.nextInt(6), random.nextInt(100), random.nextFloat(1000));
             createFile(targetDate, random.nextInt(6), random.nextInt(100), random.nextFloat(1000));
             createFile(targetDate, random.nextInt(6), random.nextInt(100), random.nextFloat(1000));
-
             */
+
             createFile(targetDate, 2, 5, 100);
             createFile(targetDate, 3, 10, 100);
 

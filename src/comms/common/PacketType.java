@@ -6,7 +6,9 @@ public enum PacketType {
     QUERY_QTD,
     QUERY_TOTAL,
     QUERY_MEDIAN,
-    QUERY_MAX;
+    QUERY_MAX,
+    ADD_SALE,
+    CREATE_PRODUCT;
 
     public static PacketType fromByte(byte b){
         return switch (b){
@@ -16,6 +18,8 @@ public enum PacketType {
             case 0x03 -> QUERY_TOTAL;
             case 0x04 -> QUERY_MEDIAN;
             case 0x05 -> QUERY_MAX;
+            case 0x06 -> ADD_SALE;
+            case 0x07 -> CREATE_PRODUCT;
             default -> null;
         };
     }
@@ -28,6 +32,8 @@ public enum PacketType {
             case QUERY_TOTAL -> 0x03;
             case QUERY_MEDIAN -> 0x04;
             case QUERY_MAX -> 0x05;
+            case ADD_SALE -> 0x06;
+            case CREATE_PRODUCT -> 0x07;
         };
     }
 }

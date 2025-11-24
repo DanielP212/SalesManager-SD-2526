@@ -15,10 +15,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SalesManager {
     //TODO (a concorrencia deve estar ok) fazer requests para adicionar uma venda ao dia atual e para passar de dia a usar essas funcoes em baixo (esta apenas cliente admin) para ja que se foda
 
+    private static final HashMap<Integer, Product> allProducts = new HashMap<>();
+    private static final ReadWriteLock productsLock = new ReentrantReadWriteLock();
     // com a funcao avancar do tempo esta variavel precisa de ser vista por todas as threads logo
     private static volatile LocalDate mostRecentDate = LocalDate.now();
     private static final TreeMap<LocalDate, WorkDay> workDaysCache = new TreeMap<>();
-    private static ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    private static final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
     private static WorkDay currentWorkDay;
     private static DataOutputStream currentDayWriter;
@@ -50,32 +52,34 @@ public class SalesManager {
 
             File f = new File(date.toString() + ".dat");
             currentDayWriter = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f, true)));
+            initialized = true;
         } finally {
             currentDayLock.unlock();
         }
     }
 
-    public static void registerSale(String productName, int quantity, float price) {
+    public static boolean registerSale(int productId, int quantity, float price) {
         if (!initialized) throw new IllegalStateException("SalesManager nao esta on!!!");
-
         currentDayLock.lock();
         try {
-            Product product = new Product(productName);
+            Product product = getProduct(productId);
+            if (product == null) return false;
             for(int i = 0 ; i < quantity ; i++){
                 currentWorkDay.addSale(product, price);
             }
-
             if (currentDayWriter != null) {
                 currentDayWriter.writeInt(product.getId());
                 currentDayWriter.writeInt(quantity);
                 currentDayWriter.writeFloat(price);
                 currentDayWriter.flush();
             }
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             currentDayLock.unlock();
         }
+        return true;
     }
 
     public static void advanceDay() throws IOException {
@@ -95,8 +99,7 @@ public class SalesManager {
         }
     }
 
-    public static WorkDay getDay(LocalDate date) throws FileNotFoundException {
-
+    public static WorkDay getDay(LocalDate date) {
         if (date.equals(mostRecentDate)) {
             return currentWorkDay;
         }
@@ -115,19 +118,15 @@ public class SalesManager {
         File file = new File(date.toString() + ".dat");
         if (!file.exists()) return null;
 
-
         WorkDay loadedDay = loadDayFromFile(date, file);
         if (loadedDay == null) return null;
-
         cacheLock.writeLock().lock();
         try {
-
             if (workDaysCache.containsKey(date)) {
                 WorkDay wd = workDaysCache.get(date);
                 wd.startProcessing();
                 return wd;
             }
-
             if (workDaysCache.size() >= s) {
                 if (!makeRoomInCache()) {
                     // se nao houver maneira de libertar espaco na cache processa apenas
@@ -135,12 +134,9 @@ public class SalesManager {
                     return loadedDay;
                 }
             }
-
-
             workDaysCache.put(date, loadedDay);
             loadedDay.startProcessing();
             return loadedDay;
-
         } finally {
             cacheLock.writeLock().unlock();
         }
@@ -232,5 +228,27 @@ public class SalesManager {
     public static float getMaxPrice(int numDays, int productID){
         return Collections.max(getLastDays(numDays).stream()
                 .map(w->w.getHighestPrice(productID)).toList());
+    }
+
+
+    public static int createProduct(String productName, float basePrice){
+        productsLock.writeLock().lock();
+        try{
+            Product newProduct = new Product(productName, basePrice);
+            allProducts.put(newProduct.getId(), newProduct);
+            return newProduct.getId();
+        } finally {
+            productsLock.writeLock().unlock();
+        }
+    }
+
+    // Como produtos sao imutáveis podemos retornar direto sem precisar de fazer clone.
+    public static Product getProduct(int productId){
+        productsLock.readLock().lock();
+        try{
+            return allProducts.get(productId);
+        } finally {
+            productsLock.readLock().unlock();
+        }
     }
 }
