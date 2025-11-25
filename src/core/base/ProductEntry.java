@@ -3,35 +3,60 @@ package core.base;
 import java.time.LocalDate;
 import java.util.*;
 
+class Event{
+    public float sellPrice;
+    public int quantity;
+
+    public Event(float sellPrice, int quantity){
+        this.sellPrice = sellPrice;
+        this.quantity = quantity;
+    }
+
+    public float getTotal(){ return sellPrice * quantity; }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "sellPrice=" + sellPrice +
+                ", quantity=" + quantity +
+                '}';
+    }
+}
+
+
 public class ProductEntry implements Cloneable{
     private final int productID;
     private final LocalDate sellDate;
-    private final List<Float> sellPrices;
+    // Evento tem preco e quantidade
+    private final List<Event> sellEvents;
 
+    // TODO depois no caching todos os getters dos valores em cache teem de ser sincronos
     public ProductEntry(Product p, LocalDate d){
         this.sellDate = d;
         this.productID = p.getId();
-        this.sellPrices = new ArrayList<>();
+        this.sellEvents = new ArrayList<>();
     }
 
     public ProductEntry(int id, LocalDate d){
         this.sellDate = d;
         this.productID = id;
-        this.sellPrices = new ArrayList<>();
+        this.sellEvents = new ArrayList<>();
     }
 
-    public ProductEntry(Product p, float sellPrice, LocalDate d){
+    public ProductEntry(Product p, float sellPrice, int quantity, LocalDate d){
         this.sellDate = d;
         this.productID = p.getId();
-        this.sellPrices = new ArrayList<>();
-        this.sellPrices.add(sellPrice);
+        this.sellEvents = new ArrayList<>();
+        this.sellEvents.add(new Event(sellPrice, quantity));
     }
+
 
     public ProductEntry(ProductEntry pe){
         this.productID = pe.productID;
         this.sellDate = pe.getSellDate();
-        this.sellPrices = new ArrayList<>(pe.getSellPrices());
+        this.sellEvents = new ArrayList<>(pe.getEvents());
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -45,18 +70,31 @@ public class ProductEntry implements Cloneable{
     }
 
     public float getTotal(){
-        return (float) sellPrices.stream().mapToDouble(Float::doubleValue).sum();
+        return (float) sellEvents.stream().mapToDouble(Event::getTotal).sum();
     }
-    public float getHighestPrice(){ return Collections.max(sellPrices); }
-    public float getMedianPrice(){ return (float) (sellPrices.stream().mapToDouble(Float::doubleValue).sum() / getQuantitySold()); }
+
+    public float getHighestPrice() {
+        if (sellEvents.isEmpty()) return 0.0f;
+        return Collections.max(sellEvents.stream().map(e->e.sellPrice).toList());
+    }
+
+    public float getAveragePrice(){
+        return (float) (sellEvents.stream()
+                        .mapToDouble(Event::getTotal).sum()
+                / getQuantitySold());
+    }
+
     public int getQuantitySold(){
-        System.out.println(sellPrices.size());
-        return sellPrices.size(); }
+        return sellEvents.stream().mapToInt(e -> e.quantity).sum();
+    }
 
     public int getProductID(){ return productID; }
     public LocalDate getSellDate(){ return sellDate; }
 
-
-    public List<Float> getSellPrices(){ return sellPrices; }
-    public void addSellPrice(float newPrice){ sellPrices.add(newPrice); }
+    private List<Event> getEvents() {
+        return this.sellEvents;
+    }
+    public void addSellEvent(float newPrice, int quantity){
+        sellEvents.add(new Event(newPrice, quantity));
+    }
 }

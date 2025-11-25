@@ -41,15 +41,15 @@ public class WorkDay {
         }
     }
 
-    public void addSale(Product p, float sellPrice){
+    public void addSale(Product p, float sellPrice, int quantity){
         if (closed) return;
         productLock.writeLock().lock();
         try{
             ProductEntry entry = workdayEntries.get(p.getId());
             if (entry == null) {
-                workdayEntries.put(p.getId(), new ProductEntry(p, sellPrice, date));
+                workdayEntries.put(p.getId(), new ProductEntry(p, sellPrice, quantity, date));
             } else {
-                workdayEntries.get(p.getId()).addSellPrice(sellPrice);
+                workdayEntries.get(p.getId()).addSellEvent(sellPrice, quantity);
             }
         } finally {
             productLock.writeLock().unlock();
@@ -63,9 +63,8 @@ public class WorkDay {
             if(productEntry == null){
                 productEntry = new ProductEntry(id, date);
             }
-            for(int i = 0 ; i < qtd ; i++){
-                productEntry.addSellPrice(price);
-            }
+            System.out.println(qtd);
+            productEntry.addSellEvent(price, qtd);
             workdayEntries.put(id,productEntry);
         }finally {
             productLock.writeLock().unlock();
@@ -81,7 +80,7 @@ public class WorkDay {
     public float getMedianPrice(int productID){
         ProductEntry entry = getEntryToRead(productID);
         if (entry == null) return -1;
-        return entry.getMedianPrice();
+        return entry.getAveragePrice();
     }
 
     public float getHighestPrice(int productID){
@@ -106,13 +105,13 @@ public class WorkDay {
         }
     }
 
-    // Como esta a retornar um clone so precisa de lock aqui.
-    // Se nao for para retornar um clone tem de se meter o lock onde se for usar isto
-    // Na operação toda.
+    // TODO Depois com caching esta questao de threads tem de ser pensada
+    // mas em principio esta correta
     public ProductEntry getEntryToRead(int productID){
         productLock.readLock().lock();
         try {
             ProductEntry entry = workdayEntries.get(productID);
+            if (closed) return entry;
             return entry != null ? entry.clone() : null;
         }finally {
             productLock.readLock().unlock();

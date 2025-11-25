@@ -64,9 +64,7 @@ public class SalesManager {
         try {
             Product product = getProduct(productId);
             if (product == null) return false;
-            for(int i = 0 ; i < quantity ; i++){
-                currentWorkDay.addSale(product, price);
-            }
+            currentWorkDay.addSale(product, price, quantity);
             if (currentDayWriter != null) {
                 currentDayWriter.writeInt(product.getId());
                 currentDayWriter.writeInt(quantity);
@@ -182,7 +180,9 @@ public class SalesManager {
             WorkDay day = getDay(targetDate);
             if (day != null) {
                 try {
-                    total += day.getSoldQuantity(productID);
+                    int currQtd = day.getSoldQuantity(productID);
+                    if (currQtd != -1)
+                        total += day.getSoldQuantity(productID);
                 } finally {
                     day.endProcessing();
                 }

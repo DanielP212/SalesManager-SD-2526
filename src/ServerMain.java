@@ -4,7 +4,7 @@ public class ServerMain {
 
 
     public static void main(String[] args) {
-        Server server = new Server(12345, 5, 6);
+        Server server = new Server(12345, 5, 9);
         server.run();
     }
 }
