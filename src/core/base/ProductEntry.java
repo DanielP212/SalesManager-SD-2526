@@ -2,6 +2,8 @@ package core.base;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Event{
     public float sellPrice;
@@ -30,7 +32,12 @@ public class ProductEntry implements Cloneable{
     // Evento tem preco e quantidade
     private final List<Event> sellEvents;
 
-    // TODO depois no caching todos os getters dos valores em cache teem de ser sincronos
+    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    private Integer cachedQuantity = null;
+    private Float cachedHighestPrice = null;
+    private Float cachedAveragePrice = null;
+    private Float cachedTotal = null;
+
     public ProductEntry(Product p, LocalDate d){
         this.sellDate = d;
         this.productID = p.getId();
@@ -70,22 +77,86 @@ public class ProductEntry implements Cloneable{
     }
 
     public float getTotal(){
-        return (float) sellEvents.stream().mapToDouble(Event::getTotal).sum();
+        cacheLock.readLock().lock();
+        try{
+            if (cachedTotal != null) return cachedAveragePrice;
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+        // Caso nao seja sido calculado
+        // Double Checking, acho que e preciso!
+        cacheLock.writeLock().lock();
+        try{
+            if (cachedTotal != null) return cachedTotal;
+            float result = (float) sellEvents.stream().mapToDouble(Event::getTotal).sum();
+            cachedTotal = result;
+            return result;
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
     }
 
     public float getHighestPrice() {
-        if (sellEvents.isEmpty()) return 0.0f;
-        return Collections.max(sellEvents.stream().map(e->e.sellPrice).toList());
+        cacheLock.readLock().lock();
+        try{
+            if (cachedHighestPrice != null) return cachedHighestPrice;
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+        cacheLock.writeLock().lock();
+        try{
+            if (cachedHighestPrice != null) return cachedHighestPrice;
+            float result = 0.0f;
+            if (!sellEvents.isEmpty())
+                result = Collections.max(sellEvents.stream().map(e->e.sellPrice).toList());
+
+            cachedHighestPrice = result;
+            return result;
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
     }
 
     public float getAveragePrice(){
-        return (float) (sellEvents.stream()
-                        .mapToDouble(Event::getTotal).sum()
-                / getQuantitySold());
+        cacheLock.readLock().lock();
+        try{
+            if (cachedAveragePrice != null) return cachedAveragePrice;
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+        cacheLock.writeLock().lock();
+        try{
+            if (cachedAveragePrice != null) return cachedAveragePrice;
+            float result = (float) (sellEvents.stream()
+                    .mapToDouble(Event::getTotal).sum()
+                    / getQuantitySold());
+            cachedAveragePrice = result;
+            return result;
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
     }
 
     public int getQuantitySold(){
-        return sellEvents.stream().mapToInt(e -> e.quantity).sum();
+        cacheLock.readLock().lock();
+        try{
+            if (cachedQuantity != null) return cachedQuantity;
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+        cacheLock.writeLock().lock();
+        try{
+            if (cachedQuantity != null) return cachedQuantity;
+            int result = sellEvents.stream().mapToInt(e -> e.quantity).sum();
+            cachedQuantity = result;
+            return result;
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
     }
 
     public int getProductID(){ return productID; }

@@ -1,6 +1,7 @@
 package client;
 
 import comms.Packet;
+import comms.common.PacketType;
 import server.requests.Request;
 
 public class PendingRequestThread extends Thread {
@@ -22,6 +23,16 @@ public class PendingRequestThread extends Thread {
             System.out.println("Null packet. How did we get here?");
             return;
         };
+        if (requestPacket.getType() == PacketType.LOGIN){
+           try{
+                int maybeID = Integer.parseInt(reqResponse.getAnswer());
+                connectionThread.assignClientID(maybeID);
+               System.out.println("[Response " + response.getID() + "] Assigned ID " +
+                       maybeID);
+               return;
+           } catch (NumberFormatException e) {
+           }
+        }
         System.out.println("[Response " + response.getID() + "] " +
                 reqResponse.getAnswer());
     }

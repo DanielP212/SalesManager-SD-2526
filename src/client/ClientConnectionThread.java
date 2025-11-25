@@ -10,10 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ClientConnectionThread extends Thread{
+    private final Client parentClient;
     private final Connection conn;
     private final Map<Integer, PendingRequest> pendingRequests = new HashMap<>();
 
-    public ClientConnectionThread(Socket s){
+    public ClientConnectionThread(Client parentClient, Socket s){
+        this.parentClient = parentClient;
         this.conn = new Connection(s);
     }
 
@@ -55,4 +57,6 @@ public class ClientConnectionThread extends Thread{
             throw new RuntimeException(e);
         }
     }
+
+    public void assignClientID(int assignedID){ parentClient.assignID(assignedID); }
 }

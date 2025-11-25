@@ -62,7 +62,7 @@ public class WorkDay {
             if(productEntry == null){
                 productEntry = new ProductEntry(id, date);
             }
-            System.out.println(qtd);
+            //System.out.println(qtd);
             productEntry.addSellEvent(price, qtd);
             workdayEntries.put(id,productEntry);
         }finally {
