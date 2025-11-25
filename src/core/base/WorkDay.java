@@ -8,7 +8,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Isto aqui deve estar a funcionar perfeito para concorrência
 public class WorkDay {
-    // TODO ainda precisa de uma lista de eventos
     private final LocalDate date;
     private final Map<Integer, ProductEntry> workdayEntries = new HashMap<>();
     private final ReadWriteLock productLock = new ReentrantReadWriteLock();

@@ -42,7 +42,7 @@ public abstract class Request {
     }
 
     // Funcao para receber uma string do buffer
-    public static String getString(ByteBuffer buffer){
+    public String getString(ByteBuffer buffer){
         int stringSize = buffer.get();
         if (stringSize <= 0) return null;
         StringBuilder sBuilder = new StringBuilder();
@@ -51,11 +51,12 @@ public abstract class Request {
         return sBuilder.toString();
     }
 
-    public static byte getByte(ByteBuffer buffer){
+    public byte getByte(ByteBuffer buffer){
         return buffer.get();
     }
 
-    public static int getInt(ByteBuffer buffer){
+    public int getInt(ByteBuffer buffer){
+        if (requesterClient == -1) return buffer.getInt();
         String maybeInt = getString(buffer);
         try{
             assert maybeInt != null;
@@ -66,7 +67,8 @@ public abstract class Request {
         }
     }
 
-    public static float getFloat(ByteBuffer buffer){
+    public float getFloat(ByteBuffer buffer){
+        if (requesterClient == -1) return buffer.getFloat();
         String maybeFloat = getString(buffer);
         try{
             return Float.parseFloat(maybeFloat);
