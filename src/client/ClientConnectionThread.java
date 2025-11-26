@@ -5,6 +5,7 @@ import comms.Packet;
 import server.requests.Request;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,4 +60,6 @@ public class ClientConnectionThread extends Thread{
     }
 
     public void assignClientID(int assignedID){ parentClient.assignID(assignedID); }
+    public boolean isTestConnection(){ return parentClient.isTestInstance(); }
+    public PrintStream getTestOut(){ return parentClient.getTestOutput(); }
 }

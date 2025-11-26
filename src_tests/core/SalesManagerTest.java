@@ -6,10 +6,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SalesManagerTest {
-    PrintWriter writer;
+    PrintWriter writer; // Por onde mandar inputs ao cliente
+    ByteArrayOutputStream readTest; // Por onde ler outputs do cliente
+    PrintStream clientOut; // Para onde o cliente manda prints. Util para utilizar transferTo()
     Thread clientThread;
 
     private boolean initialized = false;
@@ -24,9 +27,14 @@ class SalesManagerTest {
         init();
         try {
             int expected = SalesManager.getSoldQuantity(10, 2);
-            writer.println("query_qtd 2 10");
-            Thread.sleep(100);
-            System.out.println("Expected: " + expected);
+            String resultado = sendInput("query_qtd 2 10");
+            assertNotNull(resultado);
+            assertTrue(resultado.contains(String.valueOf(expected)));
+
+            int expected1 = 0;
+            String resultado1 = sendInput("query_qtd 1 10");
+            assertNotNull(resultado1);
+            assertTrue(resultado1.contains(String.valueOf(expected1)));
 
             writer.println("quit");
             clientThread.join();
@@ -48,8 +56,28 @@ class SalesManagerTest {
     }
 
     // //////////////////////////////////////////////////////////
-    private Thread runClientInstance(PipedInputStream clientIn){
-        Client client = TestManager.createClientInstance(clientIn);
+    private String sendInput(String input){
+        writer.println(input);
+        long startTime = System.currentTimeMillis();
+        long timeout = 2000;
+
+        try{
+            while(System.currentTimeMillis() - startTime < timeout){
+                String current = readTest.toString();
+                if (!current.isEmpty()) return current;
+                Thread.sleep(50);
+            }
+            return null;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            readTest.reset();
+        }
+    }
+
+
+    private Thread runClientInstance(PipedInputStream clientIn, PrintStream clientOut){
+        Client client = TestManager.createClientInstance(clientIn, clientOut);
         return new Thread(client);
     }
 
@@ -60,8 +88,11 @@ class SalesManagerTest {
             PipedOutputStream writePipe = new PipedOutputStream();
             PipedInputStream clientIn = new PipedInputStream(writePipe);
 
+            readTest = new ByteArrayOutputStream();
+            clientOut = new PrintStream(readTest);
+
             writer = new PrintWriter(writePipe, true);
-            clientThread = runClientInstance(clientIn);
+            clientThread = runClientInstance(clientIn, clientOut);
             clientThread.start();
         } catch (IOException e) {
             throw new RuntimeException(e);

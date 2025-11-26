@@ -33,7 +33,12 @@ public class PendingRequestThread extends Thread {
            } catch (NumberFormatException e) {
            }
         }
-        System.out.println("[Response " + response.getID() + "] " +
-                reqResponse.getAnswer());
+
+        if (connectionThread.isTestConnection()){
+            connectionThread.getTestOut().println(reqResponse.getAnswer());
+        } else {
+            System.out.println("[Response " + response.getID() + "] " +
+                    reqResponse.getAnswer());
+        }
     }
 }

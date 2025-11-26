@@ -11,13 +11,18 @@ public class Client implements Runnable {
     private static final int NOT_LOGGED_ID = -1;
     private int id = NOT_LOGGED_ID; // MUDAR para qualquer cena para nao ter de dar login
 
+    private boolean isTestInstance = false;
     InputStream userInput = null;
+    PrintStream testOutput = null;
+
     ClientConnectionThread connectionThread;
 
     public Client(){;}
 
     // Para UnitTests
-    public Client(InputStream systemIn){
+    public Client(InputStream systemIn, PrintStream testOut){
+        isTestInstance = true;
+        this.testOutput = testOut;
         System.setIn(systemIn);
         id = 1;
     }
@@ -59,4 +64,6 @@ public class Client implements Runnable {
     }
 
     public boolean isLoggedIn(){ return id != NOT_LOGGED_ID; }
+    public boolean isTestInstance() { return isTestInstance; }
+    public PrintStream getTestOutput(){ return testOutput; }
 }
