@@ -1,16 +1,12 @@
-package server;
-
-import client.Client;
+package test;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class FileCreator {
 
-    private static void createFile(LocalDate date, int productId, int quantity, float price){
+    public static void createFile(LocalDate date, int productId, int quantity, float price){
         String filename = date.toString() + ".dat";
         try(DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filename, true)))){
             dos.writeInt(productId);
@@ -21,7 +17,7 @@ public class FileCreator {
         }
     }
 
-    private static void cleanupOldFiles() {
+    public static void cleanupOldFiles() {
         File dir = new File(".");
         File[] files = dir.listFiles((d, name) -> name.endsWith(".dat"));
         if (files != null) {

@@ -13,7 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SalesManager {
-    //TODO (a concorrencia deve estar ok) fazer requests para adicionar uma venda ao dia atual e para passar de dia a usar essas funcoes em baixo (esta apenas cliente admin) para ja que se foda
 
     private static final HashMap<Integer, Product> allProducts = new HashMap<>();
     private static final ReadWriteLock productsLock = new ReentrantReadWriteLock();
@@ -152,7 +151,7 @@ public class SalesManager {
         return false;
     }
 
-    private static WorkDay loadDayFromFile(LocalDate date, File file) {
+    public static WorkDay loadDayFromFile(LocalDate date, File file) {
         WorkDay loadedDay = new WorkDay(date);
         loadedDay.close();
 

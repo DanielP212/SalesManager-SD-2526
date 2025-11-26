@@ -3,19 +3,24 @@ package client;
 import comms.Packet;
 import comms.common.PacketType;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
 
-public class Client {
+public class Client implements Runnable {
     private static final int NOT_LOGGED_ID = -1;
-    private int id = NOT_LOGGED_ID;
+    private int id = NOT_LOGGED_ID; // MUDAR para qualquer cena para nao ter de dar login
 
-    DataInputStream userInput;
+    InputStream userInput = null;
     ClientConnectionThread connectionThread;
 
+    public Client(){;}
+
+    // Para UnitTests
+    public Client(InputStream systemIn){
+        System.setIn(systemIn);
+        id = 1;
+    }
 
     public void run(){
         try {
@@ -27,6 +32,8 @@ public class Client {
                 byte[] buf = new byte[1024];
                 int bytesRead = userInput.read(buf);
                 if (bytesRead > 0){
+                    if (new String(buf).trim().equals("quit")) return;
+
                     Packet p = InputHandler.handle(id, new String(Arrays.copyOf(buf, bytesRead)));
                     if (p == null){
                         System.out.println("Null packet. deu muita merda maltinha! Inputs erradas?");

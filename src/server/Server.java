@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Server {
+public class Server implements Runnable{
     private static int CLIENT_ID_COUNTER = 1;
 
     private final ServerSocket socket;
@@ -28,7 +28,6 @@ public class Server {
         }
     }
 
-    // Implementar a classe Connection
     public void run(){
         while(true){
             try {

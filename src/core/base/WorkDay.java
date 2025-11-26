@@ -104,8 +104,6 @@ public class WorkDay {
         }
     }
 
-    // TODO Depois com caching esta questao de threads tem de ser pensada
-    // mas em principio esta correta
     public ProductEntry getEntryToRead(int productID){
         productLock.readLock().lock();
         try {
