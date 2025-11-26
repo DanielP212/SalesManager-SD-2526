@@ -33,8 +33,8 @@ public class QueryRequest extends Request{
         } else if (type == PacketType.QUERY_TOTAL){
             float totalMoney = SalesManager.getTotalMoney(numDays, productID);
             Encodable.writeIntBytes(result, 0, Float.floatToIntBits(totalMoney));
-        } else if (type == PacketType.QUERY_MEDIAN){
-            float median = SalesManager.getMedianPrice(numDays, productID);
+        } else if (type == PacketType.QUERY_AVG){
+            float median = SalesManager.getAveragePrice(numDays, productID);
             Encodable.writeIntBytes(result, 0, Float.floatToIntBits(median));
         } else { // Max
             float max = SalesManager.getMaxPrice(numDays, productID);

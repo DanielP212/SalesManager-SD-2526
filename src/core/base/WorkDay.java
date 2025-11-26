@@ -76,7 +76,7 @@ public class WorkDay {
         return entry.getQuantitySold();
     }
 
-    public float getMedianPrice(int productID){
+    public float getAveragePrice(int productID){
         ProductEntry entry = getEntryToRead(productID);
         if (entry == null) return -1;
         return entry.getAveragePrice();

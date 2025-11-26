@@ -46,7 +46,7 @@ class SalesManagerTest {
     void getTotalMoney() {
         init();
         float expected = SalesManager.getTotalMoney(10, 2);
-        String result = sendInput("total 2 10");
+        String result = sendInput("query_total 2 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
 
@@ -59,7 +59,7 @@ class SalesManagerTest {
     }
 
     @Test
-    void getMedianPrice() {
+    void getAveragePrice() {
     }
 
     @Test

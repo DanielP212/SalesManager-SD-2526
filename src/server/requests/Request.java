@@ -23,7 +23,7 @@ public abstract class Request {
         Request req = switch (p.getType()){
             case LOGIN -> new LoginRequest(p.getData());
             case REGISTER -> new RegisterRequest(p.getData());
-            case QUERY_QTD, QUERY_TOTAL, QUERY_MAX, QUERY_MEDIAN -> new QueryRequest(p.getData());
+            case QUERY_QTD, QUERY_TOTAL, QUERY_MAX, QUERY_AVG -> new QueryRequest(p.getData());
             case ADD_SALE -> new AddSaleRequest(p.getData());
             case CREATE_PRODUCT -> new CreateProductRequest(p.getData());
             case null -> null;

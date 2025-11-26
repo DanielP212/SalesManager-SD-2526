@@ -3,7 +3,6 @@ package core;
 import core.base.Product;
 import core.base.WorkDay;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
@@ -190,6 +189,67 @@ public class SalesManager {
         return total;
     }
 
+    // Nome merdoso
+    public static float getTotalMoney(int numDays, int productID){
+        float total = 0f;
+        int limit = Math.min(numDays, d);
+        for (int i = 0; i <= limit; i++){
+            LocalDate targetDate = mostRecentDate.minusDays(i);
+            WorkDay day = getDay(targetDate);
+            if (day != null){
+                try{
+                    float currTotal = day.getTotal(productID);
+                    if(currTotal != -1) total += currTotal;
+                } finally {
+                    day.endProcessing();
+                }
+            }
+        }
+        return total;
+    }
+
+    // Verificado no excel
+    public static float getAveragePrice(int numDays, int productID){
+        int limit = Math.min(numDays, d);
+        float average = 0.0f;
+        int counter = 0;
+        for (int i = 0; i <= limit; i++){
+            LocalDate targetDate = mostRecentDate.minusDays(i);
+            WorkDay day = getDay(targetDate);
+            if (day != null){
+                try{
+                    float currAverage = day.getAveragePrice(productID);
+                    if (currAverage != -1){
+                        average += currAverage;
+                        counter++;
+                    }
+                } finally {
+                    day.endProcessing();
+                }
+            }
+        }
+        return average / counter;
+    }
+
+    public static float getMaxPrice(int numDays, int productID){
+        int limit = Math.min(numDays, d);
+        float max = 0.0f;
+        for (int i = 0; i <= limit; i++){
+            LocalDate targetDate = mostRecentDate.minusDays(i);
+            WorkDay day = getDay(targetDate);
+            if (day != null){
+                try{
+                    float currMax = day.getHighestPrice(productID);
+                    max = Math.max(currMax, max);
+                } finally {
+                    day.endProcessing();
+                }
+            }
+        }
+        return max;
+    }
+
+
     public WorkDay getCurrentDay(){
         return workDaysCache.get(mostRecentDate);
     }
@@ -200,34 +260,10 @@ public class SalesManager {
                 .subMap(mostRecentDate.minusDays(numDays), mostRecentDate.minusDays(1))
                 .values().stream().toList();
     }
-/*
-    public static int oldGetSoldQuantity(int numDays, int productID){
-        ArrayList<WorkDay> daysToQuery = (ArrayList<WorkDay>) getLastDays(numDays);
-        return daysToQuery.stream()
-                .mapToInt(w -> w.getSoldQuantity(productID))
-                .sum();
-    }
-*/
-    // Nome merdoso
-    public static float getTotalMoney(int numDays, int productID){
-        ArrayList<WorkDay> daysToQuery = (ArrayList<WorkDay>) getLastDays(numDays);
-        return (float)daysToQuery.stream()
-                .mapToDouble(w -> w.getTotal(productID))
-                .sum();
-    }
 
-    // Verificado no excel
-    public static float getMedianPrice(int numDays, int productID){
-        ArrayList<WorkDay> daysToQuery = (ArrayList<WorkDay>) getLastDays(numDays);
-        return (float)daysToQuery.stream()
-                .mapToDouble(w -> w.getMedianPrice(productID))
-                .sum() / numDays;
-    }
 
-    public static float getMaxPrice(int numDays, int productID){
-        return Collections.max(getLastDays(numDays).stream()
-                .map(w->w.getHighestPrice(productID)).toList());
-    }
+
+
 
 
     public static int createProduct(String productName, float basePrice){

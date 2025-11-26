@@ -3,8 +3,6 @@ package client;
 import comms.Packet;
 import comms.common.PacketType;
 
-import java.util.Arrays;
-
 public class InputHandler {
 
     // TODO Adicionar mais coisas
@@ -17,7 +15,9 @@ public class InputHandler {
             case "REGISTER" -> PacketType.REGISTER;
             case "QUERY_QTD" -> PacketType.QUERY_QTD;
             case "ADD_SALE" -> PacketType.ADD_SALE;
-            case "TOTAL" -> PacketType.QUERY_TOTAL;
+            case "QUERY_TOTAL" -> PacketType.QUERY_TOTAL;
+            case "QUERY_MAX" -> PacketType.QUERY_MAX;
+            case "QUERY_AVG" -> PacketType.QUERY_AVG;
             case "CREATE" -> PacketType.CREATE_PRODUCT;
             case null, default -> null;
         };

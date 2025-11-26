@@ -79,7 +79,7 @@ public class ProductEntry implements Cloneable{
     public float getTotal(){
         cacheLock.readLock().lock();
         try{
-            if (cachedTotal != null) return cachedAveragePrice;
+            if (cachedTotal != null) return cachedTotal;
         } finally {
             cacheLock.readLock().unlock();
         }
