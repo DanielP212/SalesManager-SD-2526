@@ -60,10 +60,46 @@ class SalesManagerTest {
 
     @Test
     void getAveragePrice() {
+        init();
+        float expected = SalesManager.getAveragePrice(10, 2);
+        String result = sendInput("query_avg 2 10");
+        assertNotNull(result);
+        assertEquals(expected, Float.parseFloat(result));
+        result = null;
+
+        expected = SalesManager.getAveragePrice(10 ,3);
+        result = sendInput("query_avg 3 10");
+        assertNotNull(result);
+        assertEquals(expected, Float.parseFloat(result));
+
+        writer.println("quit");
+        try {
+            clientThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     void getMaxPrice() {
+        init();
+        float expected = SalesManager.getMaxPrice(10, 2);
+        String result = sendInput("query_max 2 10");
+        assertNotNull(result);
+        assertEquals(expected, Float.parseFloat(result));
+        result = null;
+
+        expected = SalesManager.getMaxPrice(10, 3);
+        result = sendInput("query_max 3 10");
+        assertNotNull(result);
+        assertEquals(expected, Float.parseFloat(result));
+
+        writer.println("quit");
+        try {
+            clientThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // //////////////////////////////////////////////////////////
