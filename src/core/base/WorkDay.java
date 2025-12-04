@@ -55,6 +55,12 @@ public class WorkDay {
         }
     }
 
+    public List<Event> getAllEventsFrom(int productID){
+        ProductEntry productEntry = getEntryToRead(productID);
+        if (productEntry == null) return null;
+        return productEntry.getEvents();
+    }
+
     public void loadEventDisk(int id, int qtd, float price){
         productLock.writeLock().lock();
         try{

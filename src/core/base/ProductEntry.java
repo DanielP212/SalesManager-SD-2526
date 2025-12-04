@@ -162,7 +162,7 @@ public class ProductEntry implements Cloneable{
     public int getProductID(){ return productID; }
     public LocalDate getSellDate(){ return sellDate; }
 
-    private List<Event> getEvents() {
+    public List<Event> getEvents() {
         return this.sellEvents;
     }
     public void addSellEvent(float newPrice, int quantity){

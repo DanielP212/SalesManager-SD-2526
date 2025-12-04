@@ -5,7 +5,9 @@ import comms.common.PacketType;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Client implements Runnable {
     private static final int NOT_LOGGED_ID = -1;
@@ -16,6 +18,11 @@ public class Client implements Runnable {
     PrintStream testOutput = null;
 
     ClientConnectionThread connectionThread;
+    List<PendingRequestThread> busyThreads = new LinkedList<>();
+    Queue<PendingRequestThread> freeThreads = new LinkedList<>();
+
+    Lock busyLock = new ReentrantLock();
+    Lock freeLock = new ReentrantLock();
 
     public Client(){;}
 
@@ -50,7 +57,14 @@ public class Client implements Runnable {
                         System.out.println("It seems you are not logged in! Please login or register first!");
                         continue;
                     }
-                    new PendingRequestThread(p, connectionThread).start();
+                    if (freeThreads.isEmpty()){
+                        PendingRequestThread newThread = new PendingRequestThread(this, connectionThread);
+                        newThread.giveRequest(p);
+                        newThread.start();
+                    } else {
+                        PendingRequestThread freeThread = freeThreads.poll();
+                        freeThread.giveRequest(p);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -61,6 +75,27 @@ public class Client implements Runnable {
     public void assignID(int assignedID){
         if (isLoggedIn()) return;
         this.id = assignedID;
+    }
+
+    public void signalRequestDone(PendingRequestThread thread){
+        busyLock.lock();
+        freeLock.lock();
+        busyThreads.remove(thread);
+        freeThreads.add(thread);
+        busyLock.unlock();
+        freeLock.unlock();
+        System.out.println(thread.getName() + " finished a request!");
+    }
+
+    public void signalRequestStart(PendingRequestThread thread){
+        busyLock.lock();
+        freeLock.lock();
+        freeThreads.remove(thread);
+        busyThreads.add(thread);
+        System.out.println("Curr number of threads: " + (busyThreads.size() + freeThreads.size()));
+        busyLock.unlock();
+        freeLock.unlock();
+        System.out.println(thread.getName() + " is starting a request");
     }
 
     public boolean isLoggedIn(){ return id != NOT_LOGGED_ID; }
