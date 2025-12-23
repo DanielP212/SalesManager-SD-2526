@@ -1,7 +1,9 @@
 package core;
 
+import core.base.Event;
 import core.base.Product;
 import core.base.WorkDay;
+import core.base.ProductEntry;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -247,6 +249,12 @@ public class SalesManager {
             }
         }
         return max;
+    }
+
+    public static Map<Integer, List<Event>> getAllEventsAt(LocalDate date, int[] productIDs){
+        WorkDay day = getDay(date);
+        if (day == null) return null;
+        return day.getAllEventsFromProducts(productIDs);
     }
 
 

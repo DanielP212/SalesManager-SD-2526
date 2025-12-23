@@ -61,6 +61,14 @@ public class WorkDay {
         return productEntry.getEvents();
     }
 
+    public Map<Integer, List<Event>> getAllEventsFromProducts(int[] productIDs){
+        Map<Integer, List<Event>> eventsMap = new HashMap<>();
+        for (int i = 0; i < productIDs.length; i++){
+            eventsMap.put(productIDs[i], getAllEventsFrom(productIDs[i]));
+        }
+        return eventsMap;
+    }
+
     public void loadEventDisk(int id, int qtd, float price){
         productLock.writeLock().lock();
         try{

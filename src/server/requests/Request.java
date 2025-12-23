@@ -4,6 +4,8 @@ import comms.Packet;
 import comms.common.PacketType;
 
 import java.nio.ByteBuffer;
+import java.time.DateTimeException;
+import java.time.LocalDate;
 
 public abstract class Request {
     protected int requesterClient;
@@ -63,6 +65,25 @@ public abstract class Request {
             return Integer.parseInt(maybeInt);
         } catch (NumberFormatException e) {
             System.out.println("[REQUEST FORMATING] Error parsing int: " + maybeInt);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int[] getIntArray(ByteBuffer buffer){
+        int arraySize = getInt(buffer);
+        int[] result = new int[arraySize];
+        for (int i = 0; i < arraySize; i++){
+            result[i] = getInt(buffer);
+        }
+        return result;
+    }
+
+    public LocalDate getDate(ByteBuffer buffer){
+        String maybeDate = getString(buffer);
+        try {
+            return LocalDate.parse(maybeDate);
+        } catch (DateTimeException e){
+            System.out.println("[REQUEST FORMATTING] Error parsing date");
             throw new RuntimeException(e);
         }
     }

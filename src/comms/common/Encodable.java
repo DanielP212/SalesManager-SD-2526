@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.util.List;
 
 public abstract class Encodable {
     protected ByteArrayOutputStream bufferOut = new ByteArrayOutputStream();
@@ -33,6 +34,30 @@ public abstract class Encodable {
         buffer[offset + 1] = (byte)(toWrite >>> 16);
         buffer[offset + 2] = (byte)(toWrite >>> 8);
         buffer[offset + 3] = (byte)(toWrite);
+    }
+
+    public static void writeIntBytes(List<Byte> bytesList, int toWrite){
+        bytesList.add((byte)(toWrite >>> 24));
+        bytesList.add((byte)(toWrite >>> 16));
+        bytesList.add((byte)(toWrite >>> 8));
+        bytesList.add((byte)(toWrite));
+    }
+
+
+    public static int writeIntArray(byte[] buffer, int offset, int[] toWrite){
+        writeIntBytes(buffer, offset, toWrite.length);
+        offset += 4;
+        for (int i = 0; i < toWrite.length; i++, offset+=4){
+            writeIntBytes(buffer, offset, toWrite[i]);
+        }
+        return offset;
+    }
+
+    public static void writeIntArray(List<Byte> bytesList, int[] toWrite){
+        writeIntBytes(bytesList, toWrite.length);
+        for (int j : toWrite) {
+            writeIntBytes(bytesList, j);
+        }
     }
 
     // retorna o novo offset
