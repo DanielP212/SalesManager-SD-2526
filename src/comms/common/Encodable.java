@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 public abstract class Encodable {
@@ -67,6 +68,24 @@ public abstract class Encodable {
         buffer[offset++] = (byte)stringSize;
         for (int i = 0; i < stringSize; i++) buffer[offset++] = (byte)toWrite.charAt(i);
         return offset;
+    }
+
+    public static void writeString(List<Byte> bytesList, String toWrite){
+        int stringSize = toWrite.length();
+        writeIntBytes(bytesList, stringSize);
+        for (int i = 0; i < stringSize; i++){
+            bytesList.add((byte)toWrite.charAt(i));
+        }
+    }
+
+    public static String readString(ByteBuffer buffer){
+        int stringSize = buffer.get();
+        if (stringSize <= 0) return null;
+        StringBuilder sBuilder = new StringBuilder();
+        for (int i = 0; i < stringSize; i++){
+            sBuilder.append((char)buffer.get());
+        }
+        return sBuilder.toString();
     }
 
     private void writePacketSize(byte[] buffer,int size){

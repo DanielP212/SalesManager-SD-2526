@@ -64,6 +64,9 @@ public class WorkDay {
     public Map<Integer, List<Event>> getAllEventsFromProducts(int[] productIDs){
         Map<Integer, List<Event>> eventsMap = new HashMap<>();
         for (int i = 0; i < productIDs.length; i++){
+            if (productIDs[i] == -1){
+                eventsMap.put(productIDs[i], null);
+            }
             eventsMap.put(productIDs[i], getAllEventsFrom(productIDs[i]));
         }
         return eventsMap;

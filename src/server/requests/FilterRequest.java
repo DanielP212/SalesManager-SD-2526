@@ -3,6 +3,7 @@ package server.requests;
 import comms.common.Encodable;
 import core.SalesManager;
 import core.base.Event;
+import core.base.Product;
 import core.base.WorkDay;
 
 import java.nio.ByteBuffer;
@@ -14,23 +15,38 @@ import java.util.Map;
 
 public class FilterRequest extends Request{
     private final ByteBuffer buffer;
+    private final LocalDate date;
+    private final String[] productsQueried;
 
-    protected FilterRequest(byte[] data){ this.buffer = ByteBuffer.wrap(data); }
+    protected FilterRequest(byte[] data){
+        this.buffer = ByteBuffer.wrap(data);
+        this.date = getDate(buffer);
+        productsQueried = readStringArray(buffer);
+    }
 
 
     // TODO Funcao nao testada
     @Override
     public byte[] execute() {
         if (requesterClient == -1) return null;
-        LocalDate date = getDate(buffer);
-        int[] productsQueried = getIntArray(buffer);
-        Map<Integer, List<Event>> productsEvents = SalesManager.getAllEventsAt(date, productsQueried);
+        int[] productsIds = new int[productsQueried.length];
+        Map<Integer, String> productsMap = new HashMap<>();
+        for (int i = 0; i < productsIds.length; i++){
+            Product p = SalesManager.getProductByName(productsQueried[i]);
+            if (p == null){
+                productsIds[i] = -1;
+            } else {
+                productsIds[i] = p.getId();
+                productsMap.put(p.getId(), p.getName());
+            }
+        }
+        Map<Integer, List<Event>> productsEvents = SalesManager.getAllEventsAt(date, productsIds);
         if (productsEvents == null) return null;
 
         int offset = 0;
         List<Byte> resultList = new ArrayList<>();
         for (Map.Entry<Integer, List<Event>> productEvent : productsEvents.entrySet()) {
-            Encodable.writeIntBytes(resultList, productEvent.getKey());
+            Encodable.writeString(resultList, productsMap.get(productEvent.getKey()));
             Map<Float, Integer> collapsedEvents = new HashMap<>();
             for (Event event : productEvent.getValue()) {
                 if (!collapsedEvents.containsKey(event.sellPrice)){
@@ -54,17 +70,5 @@ public class FilterRequest extends Request{
         }
 
         return result;
-    }
-
-    public String getAnswer() {
-        // ao ler tem de ser por ordem:
-        // id do produto
-        // numero de entradas de evento (preco, quantidade)
-        // preco
-        // quantidade
-        // ...
-        // id do produto
-        // ...
-        return "";
     }
 }

@@ -5,7 +5,7 @@ import comms.common.PacketType;
 
 public class InputHandler {
 
-    // TODO Adicionar mais coisas
+    // TODO Adicionar o Filter request e testar
     // TODO interface para o cliente
     private static PacketType findType(String msg){
         msg = msg.toUpperCase().trim();

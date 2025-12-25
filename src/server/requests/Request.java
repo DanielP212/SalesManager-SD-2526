@@ -51,6 +51,15 @@ public abstract class Request {
         return sBuilder.toString();
     }
 
+    public String[] readStringArray(ByteBuffer buffer){
+        int arraySize = buffer.getInt();
+        String[] result = new String[arraySize];
+        for (int i = 0; i < arraySize; i++){
+            result[i] = readString(buffer);
+        }
+        return result;
+    }
+
     public byte getByte(ByteBuffer buffer){
         return buffer.get();
     }
@@ -68,7 +77,7 @@ public abstract class Request {
     }
 
     public int[] getIntArray(ByteBuffer buffer){
-        int arraySize = getInt(buffer);
+        int arraySize = buffer.getInt();
         int[] result = new int[arraySize];
         for (int i = 0; i < arraySize; i++){
             result[i] = getInt(buffer);

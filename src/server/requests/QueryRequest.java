@@ -18,7 +18,6 @@ public class QueryRequest extends Request{
         numDays = getInt(buffer);
     }
 
-    // TODO request ainda nao foi tudo testado
     @Override
     public byte[] execute(){
         if (requesterClient == -1) return null;

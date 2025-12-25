@@ -294,4 +294,16 @@ public class SalesManager {
             productsLock.readLock().unlock();
         }
     }
+
+    public static Product getProductByName(String productName){
+        productsLock.readLock().lock();
+        try {
+            for (Product p : allProducts.values()) {
+                if (p.getName().equals(productName)) return p;
+            }
+            return null;
+        } finally {
+            productsLock.readLock().unlock();
+        }
+    }
 }
