@@ -65,7 +65,60 @@ O sistema desenvolvido baseia-se numa arquitetura cliente-servidor, onde a comun
 Esta solução proposta visa uma correção eficiente, valorizando estratégias que minimizam o número de threads ativas. 
 \texttt{ALGUEM MELHORE ISTO AQUI PURFA.}
 
-\section{Cliente}
+\section{Pedidos}
+Os pedidos dos clientes ao servidor são realizados através do protocolo TCP, garantindo fiávelmente que o pedido e a sua resposta sejam recebidas.
 
+Na interface do cliente todos os pedidos são \emph{case-insensitive} de forma a facilitar a escrita e apelar a todos os utilizadores.
+Um cliente realiza um pedido através da interface dada, estes pedidos podem ser dos tipos:
+
+\subsection{Autenticação}
+Para poder realizar pedidos um utilizador tem, obrigatoriamente, de estar autenticado. Para este fim são disponibilizados os pedidos de \texttt{Register} e \texttt{Login}.
+Ambos os pedidos necessitam de dois campos para serem válidos.
+
+\begin{itemize}
+  \item \emph{Username}: O nome pelo qual o utilizador será autenticado.
+  \item \emph{Password}: A palavra-passe do utilizador.
+\end{itemize}
+
+Caso já autenticado um utilizador não poderá se autenticar novamente nem registar nenhum utilizador.
+
+
+\subsection{Registo de Eventos}
+O registo de um evento relativo ao dia corrente é feito através do pedido \texttt{ADD\_SALE}.
+Este pedido será executado corretamente apenas quando o produto ao qual se pretende adicionar um evento existe, pelo que caso contrário nenhuma alteração será feita. Para este efeito são necessários os argumentos.
+
+\begin{itemize}
+  \item \emph{ProductName}: O nome do produto ao qual se pretende adicionar um evento.
+  \item \emph{Quantity}: A quantidade de produtos vendida. 
+  \item \emph{SellPrice}: O preço pelo qual os produtos foram vendidos.
+\end{itemize}
+
+\subsection{Queries}
+Um cliente pode realizar \emph{Queries} sobre os dados do servidor.
+Todas as \emph{queries} disponibilizadas necessitam dos mesmos dados para serem executadas corretamente:
+\begin{itemize}
+  \item \emph{ProductName}: O nome do produto sobre o qual se realiza a query.
+  \item \emph{NumDays}: O número de dias posteriores ao atual sobre o qual se realiza a query.
+\end{itemize}
+
+\noindent Um cliente pode fazer pedidos relativos à quantidade de que um produto foi vendido, ao preço máximo pelo qual foi vendido, o preço médio e ainda a receita total das vendas desse produto.
+Para isto são usados respetivamente os pedidos:
+
+\noindent \texttt{Query\_QTD}
+\\\texttt{Query\_MAX}
+\\\texttt{Query\_AVG}
+\\\texttt{Query\_TOTAL}
+
+\subsection{Filtros}
+Os pedidos de filtros são pedidos que dado um conjunto de itens e um dia anterior ao corrente, devolve uma lista de todos os eventos desses itens de forma organizada e compacta.
+\begin{itemize}
+  \item \emph{ProductNames}: Nomes dos produtos
+  \item \emph{Day}: Dia sobre o qual se quer os eventos
+\end{itemize}
+
+\texttt{METER EXEMPLO DE COMO OS DADOS SAO RETORNADOS AQUI}
+
+\subsection{Notificações}
+\texttt{AINDA NAO IMPLEMENTADO!}
 
 \end{document}
