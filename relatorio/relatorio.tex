@@ -1,0 +1,71 @@
+\UseRawInputEncoding
+\documentclass[runningheads]{llncs}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+
+
+% Configuração para mostrar código Java
+\definecolor{javared}{rgb}{0.6,0,0} % for strings
+\definecolor{javagreen}{rgb}{0.25,0.5,0.35} % comments
+\definecolor{javapurple}{rgb}{0.5,0,0.35} % keywords
+\definecolor{javadocblue}{rgb}{0.25,0.35,0.75} % javadoc
+
+
+\lstset{
+    language=Java,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{javapurple}\bfseries,
+    stringstyle=\color{javared},
+    commentstyle=\color{javagreen},
+    morecomment=[s][\color{javadocblue}]{/**}{*/},
+    numbers=left,
+    numberstyle=\tiny\color{black},
+    stepnumber=1,
+    numbersep=10pt,
+    tabsize=2,
+    showspaces=false,
+    showstringspaces=false,
+    frame=single,
+    breaklines=true,
+    captionpos=b,
+}
+
+
+\begin{document}
+
+\title{Sistemas Distribuídos - Trabalho Prático}
+
+\author{Daniel Pereira\inst{106912} \and
+Fernando Ferreira\inst{106878} \and
+José Diogo Fernandes\inst{104}}
+
+\authorrunning{Grupo }
+
+\institute{Universidade do Minho, Braga, Portugal\\}
+
+\maketitle
+
+\begin{abstract}
+Este relatório descreve a implementação de um sistema de serviço de registo de eventos em séries temporais e de agregação de informação, relativos a venda de produtos. 
+  A informação é mantida num \emph{Servidor} e acedida remotamente através de um \emph{Cliente} conectado por sockets TCP.
+
+  \keywords{TCP \and Serialização TLV \and Java Concurrency.}
+\end{abstract}
+
+\section{Introdução}
+O sistema desenvolvido baseia-se numa arquitetura cliente-servidor, onde a comunicação é estabelecida através de sockets TCP. O servidor foi desenhado de forma a processar pedidos de multiplos clientes concurrentemente, pelo que foi necessário cuidados para garantir a sincronização de dados dentro das várias estruturas do servidor.
+Esta solução proposta visa uma correção eficiente, valorizando estratégias que minimizam o número de threads ativas. 
+\texttt{ALGUEM MELHORE ISTO AQUI PURFA.}
+
+\section{Cliente}
+
+
+\end{document}
