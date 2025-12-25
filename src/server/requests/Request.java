@@ -18,9 +18,6 @@ public abstract class Request {
      */
     public abstract byte[] execute();
 
-    // Para ser chamado no cliente!
-    public abstract String getAnswer();
-
     public static Request fromPacket(Packet p){
         Request req = switch (p.getType()){
             case LOGIN -> new LoginRequest(p.getData());
@@ -43,8 +40,9 @@ public abstract class Request {
          return req;
     }
 
+
     // Funcao para receber uma string do buffer
-    public String getString(ByteBuffer buffer){
+    public String readString(ByteBuffer buffer){
         int stringSize = buffer.get();
         if (stringSize <= 0) return null;
         StringBuilder sBuilder = new StringBuilder();
@@ -59,7 +57,7 @@ public abstract class Request {
 
     public int getInt(ByteBuffer buffer){
         if (requesterClient == -1) return buffer.getInt();
-        String maybeInt = getString(buffer);
+        String maybeInt = readString(buffer);
         try{
             assert maybeInt != null;
             return Integer.parseInt(maybeInt);
@@ -79,7 +77,7 @@ public abstract class Request {
     }
 
     public LocalDate getDate(ByteBuffer buffer){
-        String maybeDate = getString(buffer);
+        String maybeDate = readString(buffer);
         try {
             return LocalDate.parse(maybeDate);
         } catch (DateTimeException e){
@@ -90,7 +88,7 @@ public abstract class Request {
 
     public float getFloat(ByteBuffer buffer){
         if (requesterClient == -1) return buffer.getFloat();
-        String maybeFloat = getString(buffer);
+        String maybeFloat = readString(buffer);
         try{
             return Float.parseFloat(maybeFloat);
         } catch (NumberFormatException e){

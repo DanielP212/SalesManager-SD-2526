@@ -4,22 +4,26 @@ import comms.common.Encodable;
 import core.SalesManager;
 import core.base.Product;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 
 public class AddSaleRequest extends Request{
     private final ByteBuffer buffer;
+    private final int productId;
+    private final int quantity;
+    private final float price;
 
-    public AddSaleRequest(byte[] data){ this.buffer = ByteBuffer.wrap(data); }
+    public AddSaleRequest(byte[] data){
+        this.buffer = ByteBuffer.wrap(data);
+        productId = getInt(buffer);
+        quantity = getInt(buffer);
+        price = getFloat(buffer);
+    }
 
 
+    // TODO Mudar isto para receber por nome inves de ID
     @Override
     public byte[] execute() {
         if (requesterClient == -1) return null;
-        int productId = getInt(buffer);
-        int quantity = getInt(buffer);
-        float price = getFloat(buffer);
 
         boolean success = SalesManager.registerSale(productId, quantity, price);
         if (success){
@@ -29,12 +33,5 @@ public class AddSaleRequest extends Request{
             return result;
         }
         else return new byte[]{0x00};
-    }
-
-    @Override
-    public String getAnswer() {
-        String productName = getString(buffer);
-        if (productName == null) return "Non-existent Product!";
-        return "Registered sale for product " + productName;
     }
 }

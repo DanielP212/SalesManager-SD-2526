@@ -56,8 +56,15 @@ public class FilterRequest extends Request{
         return result;
     }
 
-    @Override
     public String getAnswer() {
+        // ao ler tem de ser por ordem:
+        // id do produto
+        // numero de entradas de evento (preco, quantidade)
+        // preco
+        // quantidade
+        // ...
+        // id do produto
+        // ...
         return "";
     }
 }

@@ -1,5 +1,7 @@
 package client;
 
+import client.answers.Answer;
+import client.answers.LoginAnswer;
 import comms.Packet;
 import comms.common.PacketType;
 import server.requests.Request;
@@ -51,15 +53,15 @@ public class PendingRequestThread extends Thread {
             System.out.println("[Request " + requestPacket.getID() + "] " +
                     "Sending Request");
             Packet response = connectionThread.sendRequest(requestPacket);
-            Request reqResponse = Request.fromPacket(response);
-            if (reqResponse == null){
+            Answer answer = Answer.fromPacket(response);
+            if (answer == null){
                 System.out.println("Null packet. How did we get here?");
                 finishRequest();
                 continue;
             };
             if (requestPacket.getType() == PacketType.LOGIN){
                 try{
-                    int maybeID = Integer.parseInt(reqResponse.getAnswer());
+                    int maybeID = ((LoginAnswer) answer).getAssignedID();
                     connectionThread.assignClientID(maybeID);
                     System.out.println("[Response " + response.getID() + "] Assigned ID " +
                             maybeID);
@@ -70,10 +72,10 @@ public class PendingRequestThread extends Thread {
             }
 
             if (connectionThread.isTestConnection()){
-                connectionThread.getTestOut().println(reqResponse.getAnswer());
+                connectionThread.getTestOut().println(answer);
             } else {
                 System.out.println("[Response " + response.getID() + "] " +
-                        reqResponse.getAnswer());
+                        answer);
             }
             finishRequest();
         }

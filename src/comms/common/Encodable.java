@@ -13,14 +13,14 @@ public abstract class Encodable {
     protected ByteArrayInputStream bufferIn;
     protected DataInputStream dataIn;
 
-    public static byte BYTE_TYPE = 0x00;
-    public static byte INTEGER_TYPE = 0x01;
-    public static byte FLOAT_TYPE = 0x02;
-    public static byte DOUBLE_TYPE = 0x03;
-    public static byte CHAR_TYPE = 0x04;
-    public static byte STRING_TYPE = 0x05;
-    public static byte COORDINATE_TYPE = 0x06;
-    public static byte ARRAY_TYPE = 0x10;
+    public static final byte BYTE_TYPE = 0x00;
+    public static final byte INTEGER_TYPE = 0x01;
+    public static final byte FLOAT_TYPE = 0x02;
+    public static final byte DOUBLE_TYPE = 0x03;
+    public static final byte CHAR_TYPE = 0x04;
+    public static final byte STRING_TYPE = 0x05;
+    public static final byte COORDINATE_TYPE = 0x06;
+    public static final byte ARRAY_TYPE = 0x10;
 
     public Encodable(){;}
 
@@ -28,6 +28,8 @@ public abstract class Encodable {
         this.bufferIn = new ByteArrayInputStream(data);
         this.dataIn = new DataInputStream(bufferIn);
     }
+
+
 
     public static void writeIntBytes(byte[] buffer, int offset, int toWrite){
         buffer[offset] = (byte)(toWrite >>> 24);
@@ -42,7 +44,6 @@ public abstract class Encodable {
         bytesList.add((byte)(toWrite >>> 8));
         bytesList.add((byte)(toWrite));
     }
-
 
     public static int writeIntArray(byte[] buffer, int offset, int[] toWrite){
         writeIntBytes(buffer, offset, toWrite.length);

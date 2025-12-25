@@ -9,17 +9,20 @@ import java.nio.ByteBuffer;
 
 public class QueryRequest extends Request{
     private final ByteBuffer buffer;
+    private final int productID;
+    private final int numDays;
 
     public QueryRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
+        productID = getInt(buffer);
+        numDays = getInt(buffer);
     }
 
     // TODO request ainda nao foi tudo testado
     @Override
     public byte[] execute(){
         if (requesterClient == -1) return null;
-        int productID = getInt(buffer);
-        int numDays = getInt(buffer);
+
         byte[] result = new byte[4];
         if (type == PacketType.QUERY_QTD){
             int soldQtd = 0;
@@ -41,15 +44,5 @@ public class QueryRequest extends Request{
             Encodable.writeIntBytes(result, 0, Float.floatToIntBits(max));
         }
         return result;
-    }
-
-    @Override
-    public String getAnswer() {
-        if (type == PacketType.QUERY_QTD){
-            int result = buffer.getInt();
-            return String.valueOf(result);
-        }
-        float result = buffer.getFloat();
-        return String.valueOf(result);
     }
 }
