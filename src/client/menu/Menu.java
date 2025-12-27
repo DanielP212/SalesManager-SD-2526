@@ -35,6 +35,7 @@ public class Menu implements MenuItem{
         items.add(new MenuAction("Adicionar Venda", PacketType.ADD_SALE));
         items.add(new MenuAction("Adicionar Notificação Seq", PacketType.NOTIFY_SEQ));
         items.add(new MenuAction("Adicionar Notificação Conq", PacketType.NOTIFY_CONC));
+        items.add(new MenuAction("Eventos de Multiplos Produtos", PacketType.FILTER));
     }
 
     public String getTitle(){ return title; }
@@ -90,7 +91,7 @@ public class Menu implements MenuItem{
         try {
             int bytesRead = clientIn.read(buf);
             if (bytesRead < 0) return null;
-            return new String(buf).trim();
+            return new String(buf,0, bytesRead).trim();
 
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -22,6 +22,7 @@ public abstract class Answer {
             case CREATE_PRODUCT -> new CreateProductAnswer(p.getType(), p.getData());
             case NOTIFY_SEQ -> new NotificationSeqAnswer(p.getType(), p.getData());
             case NOTIFY_CONC -> new NotificationConcAnswer(p.getType(), p.getData());
+            case FILTER -> new FilterAnswer(p.getType(), p.getData());
         };
     }
 

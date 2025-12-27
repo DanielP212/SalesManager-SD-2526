@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
+import java.time.LocalDate;
 import java.util.List;
 
 public abstract class Encodable {
@@ -72,11 +73,12 @@ public abstract class Encodable {
 
     public static void writeString(List<Byte> bytesList, String toWrite){
         int stringSize = toWrite.length();
-        writeIntBytes(bytesList, stringSize);
+        bytesList.add((byte)toWrite.length());
         for (int i = 0; i < stringSize; i++){
             bytesList.add((byte)toWrite.charAt(i));
         }
     }
+
 
     public static String readString(ByteBuffer buffer){
         int stringSize = buffer.get();
@@ -87,6 +89,24 @@ public abstract class Encodable {
         }
         return sBuilder.toString();
     }
+
+    public static int writeStringArray(byte[] buffer, int offset, String[] strings){
+        int arraySize = strings.length;
+        writeIntBytes(buffer, offset, arraySize);
+        offset+=4;
+        for (int i = 0; i < arraySize; i++) offset = writeString(buffer, offset, strings[i]);
+        return offset;
+    }
+
+    public static String[] readStringArray(ByteBuffer buffer){
+        int arraySize = buffer.getInt();
+        String[] result = new String[arraySize];
+        for (int i = 0; i < arraySize; i++){
+            result[i] = readString(buffer);
+        }
+        return result;
+    }
+
 
     private void writePacketSize(byte[] buffer,int size){
         writeIntBytes(buffer, 0, size);

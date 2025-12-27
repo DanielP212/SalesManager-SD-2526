@@ -7,6 +7,8 @@ import comms.common.PacketType;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MenuAction implements MenuItem{
     private final String title;
@@ -36,6 +38,7 @@ public class MenuAction implements MenuItem{
             case CREATE_PRODUCT -> CREATE();
             case NOTIFY_SEQ -> NOTIFY_SEQ();
             case NOTIFY_CONC -> NOTIFY_CONQ();
+            case FILTER -> FILTER();
             case null, default -> null;
         };
     }
@@ -45,7 +48,7 @@ public class MenuAction implements MenuItem{
         try {
             int bytesRead = mainMenu.clientIn.read(buf);
             if (bytesRead < 0) return null;
-            return new String(buf).trim();
+            return new String(buf, 0 ,bytesRead).trim();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -154,5 +157,38 @@ public class MenuAction implements MenuItem{
         Encodable.writeIntBytes(array, 0 , num);
 
         return InputHandler.handle(mainMenu.getClientId(), type, array);
+    }
+
+
+    private Packet FILTER(){
+        System.out.println("Numero do dia: ");
+        int day = readInt();
+
+        List<String> produtos = new ArrayList<>();
+        boolean stop = false;
+        do {
+            String input = readInput(255);
+            if (input.isEmpty()){
+                stop = true;
+                continue;
+            }
+            produtos.add(input);
+        } while (!stop);
+
+        String[] strings = new String[produtos.size()];
+        int totalBytes = 0;
+        totalBytes += 4; // int do dia
+        totalBytes += 4; // tamanho do array
+        for (int i = 0; i < produtos.size(); i++){
+            totalBytes++; // tamanho da string
+            totalBytes += produtos.get(i).length();
+            strings[i] = produtos.get(i);
+        }
+        byte[] array = new byte[totalBytes];
+        Encodable.writeIntBytes(array, 0, day);
+        Encodable.writeStringArray(array, 4, strings);
+
+        return InputHandler.handle(mainMenu.getClientId(), type, array);
+
     }
 }

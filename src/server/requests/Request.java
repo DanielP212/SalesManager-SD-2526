@@ -27,6 +27,7 @@ public abstract class Request {
             case CREATE_PRODUCT -> new CreateProductRequest(p.getData());
             case NOTIFY_SEQ -> new NotifySeqRequest(p.getData());
             case NOTIFY_CONC -> new NotifyConcRequest(p.getData());
+            case FILTER -> new FilterRequest(p.getData());
             case null -> null;
         };
         if (req == null) return null;
@@ -53,14 +54,6 @@ public abstract class Request {
         return sBuilder.toString();
     }
 
-    public String[] readStringArray(ByteBuffer buffer){
-        int arraySize = buffer.getInt();
-        String[] result = new String[arraySize];
-        for (int i = 0; i < arraySize; i++){
-            result[i] = readString(buffer);
-        }
-        return result;
-    }
 
     public byte getByte(ByteBuffer buffer){
         return buffer.get();

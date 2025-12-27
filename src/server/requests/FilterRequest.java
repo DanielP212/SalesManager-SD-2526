@@ -23,7 +23,7 @@ public class FilterRequest extends Request{
         int daysBefore = buffer.getInt();
         if (daysBefore == 0) date = null;
         else this.date = LocalDate.now().minusDays(daysBefore);
-        productsQueried = readStringArray(buffer);
+        productsQueried = Encodable.readStringArray(buffer);
     }
 
 
@@ -45,10 +45,11 @@ public class FilterRequest extends Request{
         Map<Integer, List<Event>> productsEvents = SalesManager.getAllEventsAt(date, productsIds);
         if (productsEvents == null) return null;
 
-        int offset = 0;
         List<Byte> resultList = new ArrayList<>();
         for (Map.Entry<Integer, List<Event>> productEvent : productsEvents.entrySet()) {
             Encodable.writeString(resultList, productsMap.get(productEvent.getKey()));
+            System.out.println(productsMap.get(productEvent.getKey()));
+            System.out.println(resultList);
             Map<Float, Integer> collapsedEvents = new HashMap<>();
             for (Event event : productEvent.getValue()) {
                 if (!collapsedEvents.containsKey(event.sellPrice)){
