@@ -306,4 +306,15 @@ public class SalesManager {
             productsLock.readLock().unlock();
         }
     }
+
+
+    public static WorkDay getCurWorkDay(){
+        currentDayLock.lock();
+        try{
+            return currentWorkDay;
+        }finally{
+            currentDayLock.unlock();
+        }
+    }
+
 }

@@ -8,7 +8,9 @@ public enum PacketType {
     QUERY_AVG,
     QUERY_MAX,
     ADD_SALE,
-    CREATE_PRODUCT;
+    CREATE_PRODUCT,
+    NOTIFY_SEQ,
+    NOTIFY_CONC;
 
     public static PacketType fromByte(byte b){
         return switch (b){
@@ -20,6 +22,8 @@ public enum PacketType {
             case 0x05 -> QUERY_MAX;
             case 0x06 -> ADD_SALE;
             case 0x07 -> CREATE_PRODUCT;
+            case 0x08 -> NOTIFY_SEQ;
+            case 0x09 -> NOTIFY_CONC;
             default -> null;
         };
     }
@@ -34,6 +38,8 @@ public enum PacketType {
             case QUERY_MAX -> 0x05;
             case ADD_SALE -> 0x06;
             case CREATE_PRODUCT -> 0x07;
+            case NOTIFY_SEQ -> 0x08;
+            case NOTIFY_CONC -> 0x09;
         };
     }
 }

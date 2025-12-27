@@ -25,6 +25,8 @@ public abstract class Request {
             case QUERY_QTD, QUERY_TOTAL, QUERY_MAX, QUERY_AVG -> new QueryRequest(p.getData());
             case ADD_SALE -> new AddSaleRequest(p.getData());
             case CREATE_PRODUCT -> new CreateProductRequest(p.getData());
+            case NOTIFY_SEQ -> new NotifySeqRequest(p.getData());
+            case NOTIFY_CONC -> new NotifyConcRequest(p.getData());
             case null -> null;
         };
         if (req == null) return null;

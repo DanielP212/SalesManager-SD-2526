@@ -3,7 +3,9 @@ package core.base;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 // Isto aqui deve estar a funcionar perfeito para concorrência
@@ -12,9 +14,22 @@ public class WorkDay {
     private final Map<Integer, ProductEntry> workdayEntries = new HashMap<>();
     private final ReadWriteLock productLock = new ReentrantReadWriteLock();
 
+    //para notificacoes concorrentes
+    private final Lock concNLock = new ReentrantLock();
+    private final Map<Integer, ConcSaleNotification> concWaiting = new HashMap<>();
+    private int lastSoldPID = -1;
+    private int lastSoldPCount = 0;
+
+    //para notificacoes sequenciais
+    private final Lock seqNLock = new ReentrantLock();
+    private final Map<Integer, SeqSaleNotification> seqWaiting = new HashMap<>();
+
+
+
     private final AtomicInteger activeReaders = new AtomicInteger(0);
     // Se o dia ja acabou
-    boolean closed = false;
+    private final ReadWriteLock closedLock = new ReentrantReadWriteLock();
+    private boolean closed = false;
 
     public void startProcessing() {
         activeReaders.incrementAndGet();
@@ -41,7 +56,41 @@ public class WorkDay {
     }
 
     public void addSale(Product p, float sellPrice, int quantity){
-        if (closed) return;
+        this.closedLock.readLock().lock();
+        boolean r = this.closed;
+        this.closedLock.readLock().unlock();
+        if (r) return;
+
+        concNLock.lock();
+        if (p.getId() == lastSoldPID){
+            lastSoldPCount++;
+            if(concWaiting.containsKey(lastSoldPCount)){
+                ConcSaleNotification cn = concWaiting.get(lastSoldPCount); 
+                cn.notLock.lock();
+                cn.setPName(p.getName());
+                cn.cond.signalAll();
+                cn.notLock.unlock();
+            }
+        }
+        else{
+            lastSoldPCount = 1;
+            lastSoldPID = p.getId();
+        }
+        
+        concNLock.unlock();
+
+        seqNLock.lock();
+        if(seqWaiting.containsKey(p.getId())){
+            SeqSaleNotification sn = seqWaiting.get(p.getId());
+            sn.notLock.lock();
+            sn.soldProd();
+            sn.cond.signalAll();
+            sn.notLock.unlock();
+        }
+        seqNLock.unlock();
+
+        
+        
         productLock.writeLock().lock();
         try{
             ProductEntry entry = workdayEntries.get(p.getId());
@@ -125,13 +174,122 @@ public class WorkDay {
         productLock.readLock().lock();
         try {
             ProductEntry entry = workdayEntries.get(productID);
-            if (closed) return entry;
+
+            this.closedLock.readLock().lock();
+            boolean r = this.closed;
+            this.closedLock.readLock().unlock();
+
+            if (r) return entry;
             return entry != null ? entry.clone() : null;
         }finally {
             productLock.readLock().unlock();
         }
     }
 
-    public void close(){ this.closed = true; }
+    public void close(){ 
+        this.closedLock.writeLock().lock();
+        this.closed = true;
+        this.closedLock.writeLock().unlock();
+
+        concNLock.lock();
+        for (Integer n : concWaiting.keySet()) {
+            concWaiting.get(n).cond.signalAll();
+        }
+
+        seqNLock.lock();
+        for (Integer pID : seqWaiting.keySet()) {
+            seqWaiting.get(pID).cond.signalAll();
+        }
+
+        seqNLock.unlock();
+        concNLock.unlock();
+
+    }
+
     public LocalDate getDate(){ return date; }
+    
+    public boolean isClosed(){ 
+        this.closedLock.readLock().lock();
+        try{
+            return closed;
+        }finally{
+            this.closedLock.readLock().unlock();
+        }
+    }
+
+    public ConcSaleNotification addConcNotification(int n){
+        ConcSaleNotification cn = null;
+        concNLock.lock();
+        try{
+            if(concWaiting.containsKey(n)){
+                cn = concWaiting.get(n);
+                cn.notLock.lock();
+                cn.incWaiters();
+                return concWaiting.get(n);
+            }
+            else{
+                ConcSaleNotification notification = new ConcSaleNotification(n);
+                notification.incWaiters();
+                concWaiting.put(n, notification);
+                return notification;
+            }
+        }finally{
+            if(cn != null) cn.notLock.unlock();
+            concNLock.unlock();
+        }
+    }
+
+    public void removeConcNotification(int n){
+        ConcSaleNotification cn = null;
+        concNLock.lock();
+        try{
+            if(concWaiting.containsKey(n)){
+                cn = concWaiting.get(n);
+                cn.notLock.lock();
+                if(cn.noWaiters()) concWaiting.remove(n);
+            }
+        }finally{
+            if(cn != null) cn.notLock.unlock();
+            concNLock.unlock();
+        }
+    }
+
+
+    public SeqSaleNotification addSeqSaleNotification(int pID){
+        SeqSaleNotification sn = null;
+        seqNLock.lock();
+        try{
+            if(seqWaiting.containsKey(pID)){
+                sn = seqWaiting.get(pID);
+                sn.notLock.lock();
+                sn.incWaiters();
+                return seqWaiting.get(pID);
+            }
+            else{
+                SeqSaleNotification notification = new SeqSaleNotification(pID);
+                notification.incWaiters();
+                seqWaiting.put(pID, notification);
+                return notification;
+            }
+        }finally{
+            if(sn!=null) sn.notLock.unlock();
+            seqNLock.unlock();
+        }
+    }
+
+    public void removeSeqNotification(int pID){
+        SeqSaleNotification sn = null;
+        seqNLock.lock();
+        try{
+            if(seqWaiting.containsKey(pID)){
+                sn = seqWaiting.get(pID);
+                sn.notLock.lock();
+                if(sn.noWaiters()) seqWaiting.remove(pID);
+            }
+        }finally{
+            if(sn != null) sn.notLock.unlock();
+            seqNLock.unlock();
+        }
+    }
+
 }

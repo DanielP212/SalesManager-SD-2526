@@ -20,6 +20,8 @@ public abstract class Answer {
             case QUERY_QTD, QUERY_TOTAL, QUERY_MAX, QUERY_AVG -> new QueryAnswer(p.getType(), p.getData());
             case ADD_SALE -> new AddSaleAnswer(p.getType(), p.getData());
             case CREATE_PRODUCT -> new CreateProductAnswer(p.getType(), p.getData());
+            case NOTIFY_SEQ -> new NotificationSeqAnswer(p.getType(), p.getData());
+            case NOTIFY_CONC -> new NotificationConcAnswer(p.getType(), p.getData());
         };
     }
 

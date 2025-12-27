@@ -19,6 +19,8 @@ public class InputHandler {
             case "QUERY_MAX" -> PacketType.QUERY_MAX;
             case "QUERY_AVG" -> PacketType.QUERY_AVG;
             case "CREATE" -> PacketType.CREATE_PRODUCT;
+            case "NOTIFY_SEQUENTIAL" -> PacketType.NOTIFY_SEQ;
+            case "NOTIFY_CONCURRENT" -> PacketType.NOTIFY_CONC;
             case null, default -> null;
         };
     }
