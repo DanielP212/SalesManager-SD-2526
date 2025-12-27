@@ -3,6 +3,7 @@ package server.requests;
 import comms.common.Encodable;
 import comms.common.PacketType;
 import core.SalesManager;
+import core.base.Product;
 
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
@@ -14,13 +15,16 @@ public class QueryRequest extends Request{
 
     public QueryRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
-        productID = getInt(buffer);
-        numDays = getInt(buffer);
+        String productName = Encodable.readString(buffer);
+        Product p = SalesManager.getProductByName(productName);
+        productID = (p == null) ? -1 : p.getId();
+        numDays = buffer.getInt();
     }
 
     @Override
     public byte[] execute(){
         if (requesterClient == -1) return null;
+        if (productID == -1) return null;
 
         byte[] result = new byte[4];
         if (type == PacketType.QUERY_QTD){

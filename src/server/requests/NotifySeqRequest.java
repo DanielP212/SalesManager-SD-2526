@@ -15,8 +15,8 @@ public class NotifySeqRequest extends Request {
 
     public NotifySeqRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
-        this.p1 = readString(buffer);
-        this.p2 = readString(buffer);
+        this.p1 = Encodable.readString(buffer);
+        this.p2 = Encodable.readString(buffer);
     }
 
     @Override

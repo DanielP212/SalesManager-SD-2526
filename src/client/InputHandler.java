@@ -3,6 +3,8 @@ package client;
 import comms.Packet;
 import comms.common.PacketType;
 
+import java.util.Arrays;
+
 public class InputHandler {
 
     // TODO Adicionar o Filter request e testar
@@ -25,9 +27,9 @@ public class InputHandler {
         };
     }
 
-    private static byte[] inputToBytes(String[] inputs){
+    public static byte[] inputToBytes(String[] inputs){
         int totalInputsSize = 0;
-        for(int i = 1; i < inputs.length; i++) totalInputsSize += inputs[i].trim().length();
+        for(int i = 1; i < inputs.length; i++) totalInputsSize += inputs[i].length();
 
         byte[] bytes = new byte[(inputs.length - 1) + totalInputsSize]; // -1 porque o tipo não conta
 
@@ -35,7 +37,7 @@ public class InputHandler {
         for(int i = 0; i < bytes.length;){
             String currInput = inputs[counter++];
             int inputSize = currInput.length();
-            if(counter == inputs.length) inputSize--; // Tirar o \n
+            //if(counter == inputs.length) inputSize--; // Tirar o \n
             //System.out.println(inputSize);
 
             bytes[i++] = (byte)inputSize; // 1 byte para o tamanho da string
@@ -55,5 +57,9 @@ public class InputHandler {
             return null;
         }
         return new Packet(clientID, type, inputToBytes(split));
+    }
+
+    public static Packet handle(int clientID, PacketType type, byte[] data){
+        return new Packet(clientID, type, data);
     }
 }

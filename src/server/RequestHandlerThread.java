@@ -31,7 +31,8 @@ public class RequestHandlerThread extends Thread {
         }
         byte[] requestData = req.execute();
         if (requestData == null){
-            System.out.println("Deu merda ao executar o pacote! Verifica isto aqui");
+            System.out.println("Deu merda ao executar o pacote! Verifica isto aqui(RequestHandlerThread.java) " +
+                    "Melhor fazer um pacote caso dẽ erro nao esqueça!");
             return;
         }
         Packet answerPacket = new Packet(receivedPacket, requestData);

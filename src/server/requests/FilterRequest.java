@@ -20,7 +20,9 @@ public class FilterRequest extends Request{
 
     protected FilterRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
-        this.date = getDate(buffer);
+        int daysBefore = buffer.getInt();
+        if (daysBefore == 0) date = null;
+        else this.date = LocalDate.now().minusDays(daysBefore);
         productsQueried = readStringArray(buffer);
     }
 

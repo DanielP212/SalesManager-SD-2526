@@ -121,4 +121,58 @@ Os pedidos de filtros são pedidos que dado um conjunto de itens e um dia anteri
 \subsection{Notificações}
 \texttt{AINDA NAO IMPLEMENTADO!}
 
+
+\section{Pacotes}
+Um pacote, definido em \texttt{Packet.java} é uma estrutura geral para enviar informação entre cliente e servidor. 
+\\ Este é definido pelo seu \emph{header} e \emph{data}. 
+
+\subsection{Header}
+Definido em \texttt{comms::common::PacketHeader.java}, um header de pacote contém informação comum a todos os pacotes enviados.
+
+\begin{itemize}
+  \item \emph{PacketSize}: O tamanho total do pacote, em bytes. \texttt{Integer}
+  \item \emph{PacketID}: O identificador único do pacote. \texttt{Integer}
+  \item \emph{ClientID}: O identificador único do cliente, -1 caso servidor. \texttt{Integer}
+  \item \emph{Type}: O tipo do pacote. \texttt{Byte}
+\end{itemize}
+
+\noindent
+\\ Como todos os header contêm os mesmo campos, todos de tamanho fixo, este tem sempre o mesmo tamanho de 13 bytes. Isto facilita a leitura do pacote, visto que todos os bytes após o décimo-terceiro serão bytes de \emph{payload}.
+
+\subsection{Payload}
+O \emph{payload} de um pacote são os dados que se quer enviar serializados para bytes.
+\texttt{oque escrever mais?}
+
+
+\section{Serialização}
+De forma a enviar dados eficientemente estes são serializados pelo \emph{encoder} desenvolvido \texttt{comms::common::Encodable.java}. Esta classe é abstrata, pelo que deve ser implementada por estruturas que necessitam de serializar dados, neste caso, \texttt{Packet.java e PacketHeader.java}.
+\\
+Numa abordagem inicial foi desenvolvido um serializador do tipo \texttt{TLV}, \emph{Type-Length-Value}, no entanto como a leitura dos dados não necessita de tipos de dados variáveis optou-se por uma abordagem mais simples largando o \emph{Type} e utilizando \emph{Length} apenas quando necessário como por exemplo para tamanhos de \emph{strings}.
+
+
+
+\section{Cliente}
+\texttt{Escrever aqui algo}
+
+\subsection{Pedidos}
+Os pedidos que um cliente faz ao servidor são realizados através da interface. Após ser registado um pedido este é validado e caso válido começa o processo de realização.
+
+Para gerir os pedidos de um cliente foi desenvolvida uma estrutura de threads semelhante a uma \emph{ThreadPool} tradicional. Ao ser registado um pedido procura-se por threads já criadas que estejam paradas, caso exista alguma é utilizada essa thread para enviar o pedido e esperar a sua resposta. Caso todas as threads estejam ocupadas, ou ainda não existe nenhuma, é criada uma nova para realizar esta função.
+
+Após ser enviado o pacote ao servidor, a thread responsável fica bloqueada até receber uma resposta ao ser pedido, quando então comunica a resposta ao cliente.
+\\
+Como podem existir múltiplas threads à espera de concluir o seu pedido, ao este ser enviado é registado o seu identificador único. Apartir deste, ao ser recebido uma resposta a um pedido acorda-se a thread que está bloqueada à espera desse identificador, efetivamente funcionando como um \emph{demultiplexador}.
+
+\subsection{Conexão}
+A conexão cliente-servidor é feita através de sockets TCP. Para gerir esta conexão é utilizada uma thread \texttt{ClientConnectionThread.java}. Esta thread usa uma classe geral \texttt{Connection.java}, que contém métodos de enviar e receber pacotes, para gerir a conexão. 
+\\ Quando recebido um pacote é verificado se este é válido e se era esperado. Caso isto, é lido o identificador do pacote e enviado um \emph{signal} à thread que o espera.
+
+
+\subsection{Interface}
+\emph{Ainda nao implementado}
+
+
+\section{Servidor}
+
+
 \end{document}

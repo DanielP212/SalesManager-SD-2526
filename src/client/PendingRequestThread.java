@@ -68,7 +68,7 @@ public class PendingRequestThread extends Thread {
                 } catch (NumberFormatException e) {
                 }
                 finishRequest();
-                continue;
+                return;
             }
 
             if (connectionThread.isTestConnection()){

@@ -14,8 +14,7 @@ public class NotifyConcRequest extends Request {
 
     public NotifyConcRequest(byte[] data){
         ByteBuffer buffer = ByteBuffer.wrap(data);
-        String n_str = Encodable.readString(buffer);
-        this.n = Integer.parseInt(n_str.trim());
+        this.n = buffer.getInt();
     }
 
     @Override

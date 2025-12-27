@@ -12,8 +12,8 @@ public class CreateProductRequest extends Request{
 
     public CreateProductRequest(byte[] data){
         this.buffer = ByteBuffer.wrap(data);
-        productName = readString(buffer);
-        basePrice = getFloat(buffer);
+        productName = Encodable.readString(buffer);
+        basePrice = buffer.getFloat();
     }
 
 
