@@ -169,10 +169,57 @@ A conexão cliente-servidor é feita através de sockets TCP. Para gerir esta co
 
 
 \subsection{Interface}
-\emph{Ainda nao implementado}
+A interface proporcionada ao cliente facilita a realização de operações, mostrando ao utilizador as operações disponiveis e as respetivas inputs, garantindo a sanitação das mesmas.
 
 
 \section{Servidor}
+O servidor armazena em disco todos os dados necessários para o seu funcionamento. 
+Após ser iniciado, este tem sempre uma thread à espera que clientes façam a conexão através da socket TCP, após um cliente se conectar é criada uma thread que irá controlar a socket de conexão com esse cliente, recebendo pedidos e enviando a sua resposta.
 
+\subsection{Pedidos}
+Após um cliente se conectar ao servidor este necessita, obrigatoriamente, de realizar um pedido de \emph{login}, apenas após este será dado um identificador único ao cliente, que o deixará realizar pedidos.
+
+Quando uma thread \texttt{ClientHandlerThread}, definida em \texttt{server::ClientHandlerThread.java}, recebe um pedido do cliente esta cria outra thread \texttt{RequestHandlerThread} que irá executar o pedido dependendo do seu tipo. 
+Caso o pedido seja executado com êxito, a \texttt{RequestHandlerThread} irá enviar o pacote de resposta através da conexão gerida pela \texttt{ClientHandlerThread}.
+
+\subsection{Eventos}
+Os produtos mantidos no servidor são utilizados como estrutura base dos outros componentes, todos os produtos são caracterizados por
+
+\begin{itemize}
+  \item \emph{ID}: Identificador Único. \texttt{Integer}
+  \item \emph{Name}: Nome do produto. \texttt{String}
+\end{itemize}
+
+Todos os produtos existentes no sistema são guardados pelo servidor de forma persistente. A utilização de um identificador facilita a realização de cálculos e a armazenação de informação pertinente aos produtos.
+
+\noindent Os eventos são sempre relativos a um produto, representando uma venda deste caracterizada por
+
+\begin{itemize}
+  \item \emph{SellPrice}: Preço a qual foi vendido. \texttt{Float}
+  \item \emph{Quantity}: Quantidade vendida. \texttt{Integer}
+\end{itemize}
+
+
+\subsection{Dias}
+Os dias são representados no servidor pela classe \texttt{WorkDay}, que contém estruturas e métodos necessários para realizar as operações disponíveis aos clientes.
+Um \emph{WorkDay} refere-se sempre a uma data, pelo que não podem existir dois \emph{WorkDays} com a mesma data, efetivamente fazendo o papel de identificador único.
+
+\noindent Esta estrutura guarda informação relativa à venda de produtos, guardando todos os eventos relativos a aos produtos que foram realizados no dia.
+Para facilitar o manuseamento destes dados foi desenvolvida a classe \texttt{ProductEntry}
+
+\begin{itemize}
+  \item \emph{ProductID}: O produto a qual se refere. \texttt{Integer}
+  \item \emph{Events}: Os eventos relativos ao produto. \texttt{List<Event>}
+\end{itemize}
+
+Esta estrutura contém também operações necessárias para realizar cálculos sobre os eventos. Visto que os eventos são efetivamente imutáveis após o dia mudar, estes cálculos são colocados em cache enquanto o dia em si permanecer na memória.
+
+\noindent Como ambos \emph{WorkDay} e \emph{ProductEntry} esperam múltiplos clientes realizar operações sobre eles, estes contém mecanismos de controlo de concurrência utilizando \texttt{Locks}.
+
+\texttt{Meter pedaço de código de uma funcao do productEntry com locks}
+
+
+\subsection{Memória e Cache}
+\texttt{Diogo faz isto purfa porque eu não sei bem como ta feito}
 
 \end{document}

@@ -62,6 +62,10 @@ public class PendingRequestThread extends Thread {
             if (requestPacket.getType() == PacketType.LOGIN){
                 try{
                     int maybeID = ((LoginAnswer) answer).getAssignedID();
+                    if (maybeID <= 0){
+                        System.out.println("[Response " + response.getID() + "] Invalid Login Credentials!");
+                        return;
+                    }
                     connectionThread.assignClientID(maybeID);
                     System.out.println("[Response " + response.getID() + "] Assigned ID " +
                             maybeID);
