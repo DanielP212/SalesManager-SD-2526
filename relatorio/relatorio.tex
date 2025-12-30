@@ -62,11 +62,11 @@ Este relatório descreve a implementação de um sistema de serviço de registo 
 
 \section{Introdução}
 O sistema desenvolvido baseia-se numa arquitetura cliente-servidor, onde a comunicação é estabelecida através de sockets TCP. O servidor foi desenhado de forma a processar pedidos de multiplos clientes concurrentemente, pelo que foi necessário cuidados para garantir a sincronização de dados dentro das várias estruturas do servidor.
-Esta solução proposta visa uma correção eficiente, valorizando estratégias que minimizam o número de threads ativas. 
-\texttt{ALGUEM MELHORE ISTO AQUI PURFA.}
+Esta solução proposta contribui para a minimização do número de threads ativas com o objetivo de obter uma aplicação efeciente e escalável.
+
 
 \section{Pedidos}
-Os pedidos dos clientes ao servidor são realizados através do protocolo TCP, garantindo fiávelmente que o pedido e a sua resposta sejam recebidas.
+Os pedidos dos clientes ao servidor são realizados através do protocolo fiável TCP, garantindo que o pedido e a sua resposta sejam recebidas.
 
 Na interface do cliente todos os pedidos são \emph{case-insensitive} de forma a facilitar a escrita e apelar a todos os utilizadores.
 Um cliente realiza um pedido através da interface dada, estes pedidos podem ser dos tipos:
@@ -89,7 +89,7 @@ Este pedido será executado corretamente apenas quando o produto ao qual se pret
 
 \begin{itemize}
   \item \emph{ProductName}: O nome do produto ao qual se pretende adicionar um evento.
-  \item \emph{Quantity}: A quantidade de produtos vendida. 
+  \item \emph{Quantity}: A quantidade de produtos vendida.
   \item \emph{SellPrice}: O preço pelo qual os produtos foram vendidos.
 \end{itemize}
 
@@ -123,8 +123,8 @@ Os pedidos de filtros são pedidos que dado um conjunto de itens e um dia anteri
 
 
 \section{Pacotes}
-Um pacote, definido em \texttt{Packet.java} é uma estrutura geral para enviar informação entre cliente e servidor. 
-\\ Este é definido pelo seu \emph{header} e \emph{data}. 
+Um pacote, definido em \texttt{Packet.java} é uma estrutura geral para enviar informação entre cliente e servidor.
+\\ Este é definido pelo seu \emph{header} e \emph{data}.
 
 \subsection{Header}
 Definido em \texttt{comms::common::PacketHeader.java}, um header de pacote contém informação comum a todos os pacotes enviados.
@@ -164,7 +164,7 @@ Após ser enviado o pacote ao servidor, a thread responsável fica bloqueada at�
 Como podem existir múltiplas threads à espera de concluir o seu pedido, ao este ser enviado é registado o seu identificador único. Apartir deste, ao ser recebido uma resposta a um pedido acorda-se a thread que está bloqueada à espera desse identificador, efetivamente funcionando como um \emph{demultiplexador}.
 
 \subsection{Conexão}
-A conexão cliente-servidor é feita através de sockets TCP. Para gerir esta conexão é utilizada uma thread \texttt{ClientConnectionThread.java}. Esta thread usa uma classe geral \texttt{Connection.java}, que contém métodos de enviar e receber pacotes, para gerir a conexão. 
+A conexão cliente-servidor é feita através de sockets TCP. Para gerir esta conexão é utilizada uma thread \texttt{ClientConnectionThread.java}. Esta thread usa uma classe geral \texttt{Connection.java}, que contém métodos de enviar e receber pacotes, para gerir a conexão.
 \\ Quando recebido um pacote é verificado se este é válido e se era esperado. Caso isto, é lido o identificador do pacote e enviado um \emph{signal} à thread que o espera.
 
 
@@ -173,13 +173,13 @@ A interface proporcionada ao cliente facilita a realização de operações, mos
 
 
 \section{Servidor}
-O servidor armazena em disco todos os dados necessários para o seu funcionamento. 
+O servidor armazena em disco todos os dados necessários para o seu funcionamento.
 Após ser iniciado, este tem sempre uma thread à espera que clientes façam a conexão através da socket TCP, após um cliente se conectar é criada uma thread que irá controlar a socket de conexão com esse cliente, recebendo pedidos e enviando a sua resposta.
 
 \subsection{Pedidos}
 Após um cliente se conectar ao servidor este necessita, obrigatoriamente, de realizar um pedido de \emph{login}, apenas após este será dado um identificador único ao cliente, que o deixará realizar pedidos.
 
-Quando uma thread \texttt{ClientHandlerThread}, definida em \texttt{server::ClientHandlerThread.java}, recebe um pedido do cliente esta cria outra thread \texttt{RequestHandlerThread} que irá executar o pedido dependendo do seu tipo. 
+Quando uma thread \texttt{ClientHandlerThread}, definida em \texttt{server::ClientHandlerThread.java}, recebe um pedido do cliente esta cria outra thread \texttt{RequestHandlerThread} que irá executar o pedido dependendo do seu tipo.
 Caso o pedido seja executado com êxito, a \texttt{RequestHandlerThread} irá enviar o pacote de resposta através da conexão gerida pela \texttt{ClientHandlerThread}.
 
 \subsection{Eventos}
@@ -220,6 +220,11 @@ Esta estrutura contém também operações necessárias para realizar cálculos 
 
 
 \subsection{Memória e Cache}
-\texttt{Diogo faz isto purfa porque eu não sei bem como ta feito}
+Admitindo a escalabilidade da aplicação, não é viável manter tudo em memória, deste modo implementamos um sistema de persistência para que os dados possam ser armazenados em disco. Quando um dia é requisitado para alguma ação no servidor, verifica-se este está presente em memória num \emph{TreeMap} (implementação da interface Map ordenada por chave). A escolha desta estrutura deve-se à conveniência das chaves ordenadas dado que se tratam de datas que normalmente vão ser acessadas sequencialmente.
+Dado que o servidor encontra o dia que procura em cache, incrementa a quantidade de leitores ativos daquele dia e retorna o dia, é importante destacar a utilização de um \emph{ReadWriteLock} especificamente para manipular a cache de forma concorrente e manter os \emph{locks} granulares.
+Caso o servidor não encontre, vai ser efetuado uma procura de um ficheiro \emph{ValorDoLocalDate.dat} específico do dia em questão (adicionado na inicialização de cada dia e atualizado com dados em cada avanço de dia), se este não existir a pesquisa pelos dados do dia é terminada com \emph{null}, senão, este ficheiro vai ser lido e os dados vão ser extraídos.
+
+Os dados extraídos são relevantes para ser reutilizados logo o servidor pretende guardá-los na cache então caso esta esteja cheia (determinado pela quantidade de dias guardados até S dias, variável definida na inicialização do programa) o servidor vai verificar se é possível retirar algum dia da cache do dia mais antigo até o mais recente, verificando em cada um o número de leitores ativos que esse dia tem, sendo apenas possível remover dias com 0 leitores ativos (no fim de cada \emph{querie} que utiliza certo dia, deve decrementar este valor). No sucesso de libertação da cache, o dia extraído é guardado, o número de leitores incrementado e retornado. Na falha de libertação de cache este irá ser processado sem o envolvimento da cache. Nestes processo de escrita na cache foi utilizado o \emph{WriteLock} da cache para proteger estes dados do envolvimento de mais \emph{threads}.
+
 
 \end{document}
