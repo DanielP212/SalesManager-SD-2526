@@ -26,12 +26,12 @@ class SalesManagerTest {
         init();
         try {
             int expected = SalesManager.getSoldQuantity(10, 2);
-            String result = sendInput("query_qtd 2 10");
+            String result = sendInput("query_qtd B 10");
             assertNotNull(result);
             assertTrue(result.contains(String.valueOf(expected)));
 
             int expected1 = 0;
-            String result1 = sendInput("query_qtd 1 10");
+            String result1 = sendInput("query_qtd C 10");
             assertNotNull(result1);
             assertTrue(result1.contains(String.valueOf(expected1)));
 
@@ -46,7 +46,7 @@ class SalesManagerTest {
     void getTotalMoney() {
         init();
         float expected = SalesManager.getTotalMoney(10, 2);
-        String result = sendInput("query_total 2 10");
+        String result = sendInput("query_total B 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
 
@@ -62,13 +62,13 @@ class SalesManagerTest {
     void getAveragePrice() {
         init();
         float expected = SalesManager.getAveragePrice(10, 2);
-        String result = sendInput("query_avg 2 10");
+        String result = sendInput("query_avg B 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
         result = null;
 
         expected = SalesManager.getAveragePrice(10 ,3);
-        result = sendInput("query_avg 3 10");
+        result = sendInput("query_avg C 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
 
@@ -84,13 +84,13 @@ class SalesManagerTest {
     void getMaxPrice() {
         init();
         float expected = SalesManager.getMaxPrice(10, 2);
-        String result = sendInput("query_max 2 10");
+        String result = sendInput("query_max B 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
         result = null;
 
         expected = SalesManager.getMaxPrice(10, 3);
-        result = sendInput("query_max 3 10");
+        result = sendInput("query_max C 10");
         assertNotNull(result);
         assertEquals(expected, Float.parseFloat(result));
 

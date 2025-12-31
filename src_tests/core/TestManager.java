@@ -15,6 +15,7 @@ import java.util.*;
 public class TestManager {
     private static final int s = 5;
     private static final int d = 9;
+    private static int CLIENT_ID_COUNTER = 1;
 
     private static final int PRODUCT_NUMBER = 5;
     private static final Map<LocalDate, WorkDay> days = new HashMap<>();
@@ -56,7 +57,7 @@ public class TestManager {
     }
 
     public static Client createClientInstance(InputStream clientIn, PrintStream clientOut){
-        Client client = new Client(clientIn, clientOut);
+        Client client = new Client(clientIn, clientOut, CLIENT_ID_COUNTER++);
         System.out.println("Creating Client Instance!");
         clients.add(client);
         return client;

@@ -1,6 +1,7 @@
 package client;
 
 import comms.Packet;
+import comms.common.Encodable;
 import comms.common.PacketType;
 
 import java.util.Arrays;
@@ -49,6 +50,7 @@ public class InputHandler {
         return bytes;
     }
 
+    // so para testes
     public static Packet handle(int clientID, String input){
         String[] split = input.split(" ");
         PacketType type = findType(split[0]);
@@ -56,10 +58,31 @@ public class InputHandler {
             System.out.println("Invalid operation type!");
             return null;
         }
-        return new Packet(clientID, type, inputToBytes(split));
+        return new Packet(clientID, type, serializeByType(type, split));
+        //return new Packet(clientID, type, inputToBytes(split));
     }
 
     public static Packet handle(int clientID, PacketType type, byte[] data){
         return new Packet(clientID, type, data);
+    }
+
+
+    private static byte[] serializeByType(PacketType type, String[] inputs){
+        if (type == PacketType.ADD_SALE){
+            String nome = inputs[1];
+            byte[] array = new byte[1 + nome.trim().length() + 4 + 4];
+            int offset = 0;
+            offset = Encodable.writeString(array, offset, nome);
+            Encodable.writeIntBytes(array, offset, Integer.parseInt(inputs[2].trim()));
+            Encodable.writeIntBytes(array, offset + 4, Integer.parseInt(inputs[3].trim()));
+            return array;
+        } else {
+            String nome = inputs[1];
+            byte[] array = new byte[1 + nome.trim().length() + 4];
+            int newOffset = Encodable.writeString(array, 0, nome);
+            Encodable.writeIntBytes(array, newOffset, Integer.parseInt(inputs[2].trim()));
+
+            return array;
+        }
     }
 }

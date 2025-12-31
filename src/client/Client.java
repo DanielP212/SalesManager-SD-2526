@@ -28,11 +28,11 @@ public class Client implements Runnable {
     public Client(){;}
 
     // Para UnitTests
-    public Client(InputStream systemIn, PrintStream testOut){
+    public Client(InputStream systemIn, PrintStream testOut, int clientID){
         isTestInstance = true;
         this.testOutput = testOut;
         System.setIn(systemIn);
-        id = 1;
+        id = clientID;
     }
 
     public void run(){
@@ -44,7 +44,18 @@ public class Client implements Runnable {
             Menu mainMenu = new Menu("Main", userInput, this);
             while(true){
                 Thread.sleep(100); // so para ao fazer instantaneo nao ficar feio
-                Packet p = mainMenu.execute();
+                Packet p = null;
+                if (isTestInstance){
+                    byte[] buf = new byte[1024];
+                    int bytesRead = userInput.read(buf);
+                    if (bytesRead > 0){
+                        if (new String(buf).trim().equals("quit")) return;
+                        p = InputHandler.handle(id, new String(Arrays.copyOf(buf, bytesRead)));
+
+                    }
+                } else {
+                    p = mainMenu.execute();
+                }
                 if (p == null){
                     System.out.println("Null packet. deu muita merda maltinha! Inputs erradas?");
                     continue;
