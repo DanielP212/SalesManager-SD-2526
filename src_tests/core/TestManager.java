@@ -58,7 +58,7 @@ public class TestManager {
 
     public static Client createClientInstance(InputStream clientIn, PrintStream clientOut){
         Client client = new Client(clientIn, clientOut, CLIENT_ID_COUNTER++);
-        System.out.println("Creating Client Instance!");
+        System.out.println("Creating Client Instance with ID " + CLIENT_ID_COUNTER);
         clients.add(client);
         return client;
     }

@@ -43,21 +43,19 @@ public class Client implements Runnable {
             connectionThread.start();
             Menu mainMenu = new Menu("Main", userInput, this);
             while(true){
-                Thread.sleep(100); // so para ao fazer instantaneo nao ficar feio
-                Packet p = null;
+                Packet p;
                 if (isTestInstance){
-                    byte[] buf = new byte[1024];
-                    int bytesRead = userInput.read(buf);
-                    if (bytesRead > 0){
-                        if (new String(buf).trim().equals("quit")) return;
-                        p = InputHandler.handle(id, new String(Arrays.copyOf(buf, bytesRead)));
-
-                    }
+                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                    String input = in.readLine();
+                    System.out.println("Received input: " + input.trim());
+                    if (input.trim().equals("quit")) return;
+                    p = InputHandler.handle(id, input.trim());
                 } else {
+                    Thread.sleep(100); // so para ao fazer instantâneo nao ficar feio
                     p = mainMenu.execute();
                 }
                 if (p == null){
-                    System.out.println("Null packet. deu muita merda maltinha! Inputs erradas?");
+                    System.out.println("Null packet. Inputs erradas?");
                     continue;
                 }
                 // Nao fazer nada enquanto nao estiver loggado
