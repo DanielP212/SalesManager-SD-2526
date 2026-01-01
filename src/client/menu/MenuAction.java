@@ -58,7 +58,7 @@ public class MenuAction implements MenuItem{
 
     private int readInt(){
         String input = null;
-        while(input == null) input = readInput(4);
+        while(input == null) input = readInput(8);
         try{
             return Integer.parseInt(input);
         } catch (NumberFormatException e){
@@ -69,7 +69,7 @@ public class MenuAction implements MenuItem{
 
     private float readFloat(){
         String input = null;
-        while(input == null) input = readInput(4);
+        while(input == null) input = readInput(8);
         try{
             return Float.parseFloat(input);
         } catch (NumberFormatException e){
@@ -167,6 +167,7 @@ public class MenuAction implements MenuItem{
 
         List<String> produtos = new ArrayList<>();
         boolean stop = false;
+        System.out.println("Produtos: ");
         do {
             String input = readInput(255);
             if (input.isEmpty()){

@@ -283,7 +283,7 @@ public class SalesManager {
             currentDayLock.unlock();
         }
         try {
-            for (int i = 0; i <= limit; i++) {
+            for (int i = 1; i <= limit; i++) {
                 LocalDate targetDate = daySnapshot.minusDays(i);
                 WorkDay day = getDay(targetDate);
                 if (day != null) {
@@ -329,7 +329,7 @@ public class SalesManager {
         float average = 0.0f;
         int counter = 0;
         try {
-            for (int i = 0; i <= limit; i++) {
+            for (int i = 1; i <= limit; i++) {
                 LocalDate targetDate = daySnapshot.minusDays(i);
                 WorkDay day = getDay(targetDate);
                 if (day != null) {
@@ -377,7 +377,7 @@ public class SalesManager {
 
         float max = 0.0f;
         try {
-            for (int i = 0; i <= limit; i++) {
+            for (int i = 1; i <= limit; i++) {
                 LocalDate targetDate = daySnapshot.minusDays(i);
                 WorkDay day = getDay(targetDate);
                 if (day != null) {
