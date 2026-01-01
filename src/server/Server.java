@@ -45,7 +45,7 @@ public class Server implements Runnable{
 
     // Inicializacao das coisas para testes
     public void init(){
-        authHandler.registerUser("mamaco", "preto");
+        authHandler.registerUser("mamaco", "preto", true);
         SalesManager.createProduct("A", 15.0f);
         SalesManager.createProduct("B", 15.0f);
         SalesManager.createProduct("C", 15.0f);

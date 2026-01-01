@@ -23,6 +23,7 @@ public abstract class Answer {
             case NOTIFY_SEQ -> new NotificationSeqAnswer(p.getType(), p.getData());
             case NOTIFY_CONC -> new NotificationConcAnswer(p.getType(), p.getData());
             case FILTER -> new FilterAnswer(p.getType(), p.getData());
+            case ADVANCE_DAY -> new AdvanceDayAnswer(p.getType(), p.getData());
         };
     }
 

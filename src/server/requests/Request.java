@@ -28,6 +28,7 @@ public abstract class Request {
             case NOTIFY_SEQ -> new NotifySeqRequest(p.getData());
             case NOTIFY_CONC -> new NotifyConcRequest(p.getData());
             case FILTER -> new FilterRequest(p.getData());
+            case ADVANCE_DAY -> new AdvanceDayRequest(p.getData());
             case null -> null;
         };
         if (req == null) return null;

@@ -8,10 +8,7 @@ import core.base.ProductEntry;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.*;
 
 public class SalesManager {
 
@@ -21,77 +18,126 @@ public class SalesManager {
     private static volatile LocalDate mostRecentDate = LocalDate.now();
     private static final TreeMap<LocalDate, WorkDay> workDaysCache = new TreeMap<>();
     private static final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
-
     private static WorkDay currentWorkDay;
     private static DataOutputStream currentDayWriter;
     private static final Lock currentDayLock = new ReentrantLock();
+    private static final Condition canAdvance = currentDayLock.newCondition();
+    private static final Condition canWork = currentDayLock.newCondition();
+    private static final Lock writerLock = new ReentrantLock();
 
     private static int s; // numero de dias maximos na cache
     private static int d; // numero de dias maximos
     private static boolean initialized = false;
+    private static boolean wantsToAdvance = false;
+    private static int activeThreads = 0;
 
     public SalesManager(int s, int d){
         this.s = s;
         this.d = d;
         if(d < 1 || s < 0) throw new RuntimeException();
         if(s >= d) throw new RuntimeException();
+        currentDayLock.lock();
         try {
             initCurrentDay(LocalDate.now());
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            currentDayLock.unlock();
         }
     }
 
     private static void initCurrentDay(LocalDate date) throws IOException {
-        currentDayLock.lock();
-        try {
-            if (currentDayWriter != null) currentDayWriter.close();
 
-            mostRecentDate = date;
-            currentWorkDay = new WorkDay(date);
+        if (currentDayWriter != null) currentDayWriter.close();
 
-            File f = new File(date.toString() + ".dat");
-            currentDayWriter = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f, true)));
-            initialized = true;
-        } finally {
-            currentDayLock.unlock();
-        }
+        mostRecentDate = date;
+        currentWorkDay = new WorkDay(date);
+
+        File f = new File(date.toString() + ".dat");
+        currentDayWriter = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f, true)));
+        initialized = true;
     }
 
     public static boolean registerSale(int productId, int quantity, float price) {
         if (!initialized) throw new IllegalStateException("SalesManager nao esta on!!!");
+
         currentDayLock.lock();
         try {
-            Product product = getProduct(productId);
-            if (product == null) return false;
-            currentWorkDay.addSale(product, price, quantity);
-            if (currentDayWriter != null) {
-                currentDayWriter.writeInt(product.getId());
-                currentDayWriter.writeInt(quantity);
-                currentDayWriter.writeFloat(price);
-                currentDayWriter.flush();
+            while (wantsToAdvance) {
+                canWork.await();
             }
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+            activeThreads++;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } finally {
             currentDayLock.unlock();
         }
-        return true;
+
+        boolean success = false;
+        try {
+            Product product = getProduct(productId);
+            if (product != null) {
+                currentWorkDay.addSale(product, price, quantity);
+
+                writerLock.lock();
+                try {
+                    if (currentDayWriter != null) {
+                        currentDayWriter.writeInt(product.getId());
+                        currentDayWriter.writeInt(quantity);
+                        currentDayWriter.writeFloat(price);
+                        currentDayWriter.flush();
+                    }
+                } finally {
+                    writerLock.unlock();
+                }
+                success = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            currentDayLock.lock();
+            try {
+                activeThreads--;
+                if (activeThreads == 0) {
+                    canAdvance.signalAll();
+                }
+            } finally {
+                currentDayLock.unlock();
+            }
+        }
+        return success;
     }
 
-    public static void advanceDay() throws IOException {
+    public static void advanceDay() throws IOException, InterruptedException {
         currentDayLock.lock();
         try {
+            wantsToAdvance = true;
+            while (activeThreads > 0) {
+                canAdvance.await();
+            }
 
-            if (currentDayWriter != null) currentDayWriter.close();
-            currentWorkDay.close();
+            writerLock.lock();
 
-            LocalDate nextDay = mostRecentDate.plusDays(1);
 
-            initCurrentDay(nextDay);
+            try {
+                if (currentDayWriter != null) {
+                    currentDayWriter.flush();
+                    currentDayWriter.close();
+                }
+                currentWorkDay.close();
 
-            System.out.println("Dia avançado para: " + nextDay);
+                LocalDate nextDay = mostRecentDate.plusDays(1);
+                initCurrentDay(nextDay);
+
+                System.out.println("Dia avançado para: " + nextDay);
+            } finally {
+                writerLock.unlock();
+            }
+
+            wantsToAdvance = false;
+            canWork.signalAll(); //acordar todos que estao a espera de trabalhar
+
         } finally {
             currentDayLock.unlock();
         }
@@ -173,21 +219,48 @@ public class SalesManager {
     public static int getSoldQuantity(int numDays, int productID) throws FileNotFoundException {
         int total = 0;
         int limit = Math.min(numDays, d);
+        LocalDate daySnapshot = mostRecentDate;
 
-        for (int i = 1; i <= limit; i++) {
-            LocalDate targetDate = mostRecentDate.minusDays(i);
+        currentDayLock.lock();
+        try{
+            while (wantsToAdvance) {
+                canWork.await();
+            }
+            activeThreads++;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return -1;
+        } finally {
+            currentDayLock.unlock();
+        }
 
-            WorkDay day = getDay(targetDate);
-            if (day != null) {
-                try {
-                    int currQtd = day.getSoldQuantity(productID);
-                    if (currQtd != -1)
-                        total += day.getSoldQuantity(productID);
-                } finally {
-                    day.endProcessing();
+        try {
+            for (int i = 1; i <= limit; i++) {
+                LocalDate targetDate = daySnapshot.minusDays(i);
+
+                WorkDay day = getDay(targetDate);
+                if (day != null) {
+                    try {
+                        int currQtd = day.getSoldQuantity(productID);
+                        if (currQtd != -1)
+                            total += day.getSoldQuantity(productID);
+                    } finally {
+                        day.endProcessing();
+                    }
                 }
             }
+        }finally {
+            currentDayLock.lock();
+            try {
+                activeThreads--;
+                if (activeThreads == 0) {
+                    canAdvance.signalAll();
+                }
+            } finally {
+                currentDayLock.unlock();
+            }
         }
+
         return total;
     }
 
@@ -195,16 +268,42 @@ public class SalesManager {
     public static float getTotalMoney(int numDays, int productID){
         float total = 0f;
         int limit = Math.min(numDays, d);
-        for (int i = 0; i <= limit; i++){
-            LocalDate targetDate = mostRecentDate.minusDays(i);
-            WorkDay day = getDay(targetDate);
-            if (day != null){
-                try{
-                    float currTotal = day.getTotal(productID);
-                    if(currTotal != -1) total += currTotal;
-                } finally {
-                    day.endProcessing();
+        LocalDate daySnapshot = mostRecentDate;
+
+        currentDayLock.lock();
+        try{
+            while (wantsToAdvance) {
+                canWork.await();
+            }
+            activeThreads++;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return -1;
+        } finally {
+            currentDayLock.unlock();
+        }
+        try {
+            for (int i = 0; i <= limit; i++) {
+                LocalDate targetDate = daySnapshot.minusDays(i);
+                WorkDay day = getDay(targetDate);
+                if (day != null) {
+                    try {
+                        float currTotal = day.getTotal(productID);
+                        if (currTotal != -1) total += currTotal;
+                    } finally {
+                        day.endProcessing();
+                    }
                 }
+            }
+        }finally {
+            currentDayLock.lock();
+            try {
+                activeThreads--;
+                if (activeThreads == 0) {
+                    canAdvance.signalAll();
+                }
+            } finally {
+                currentDayLock.unlock();
             }
         }
         return total;
@@ -213,39 +312,92 @@ public class SalesManager {
     // Verificado no excel
     public static float getAveragePrice(int numDays, int productID){
         int limit = Math.min(numDays, d);
+        LocalDate daySnapshot = mostRecentDate;
+
+        currentDayLock.lock();
+        try{
+            while (wantsToAdvance) {
+                canWork.await();
+            }
+            activeThreads++;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return -1;
+        } finally {
+            currentDayLock.unlock();
+        }
         float average = 0.0f;
         int counter = 0;
-        for (int i = 0; i <= limit; i++){
-            LocalDate targetDate = mostRecentDate.minusDays(i);
-            WorkDay day = getDay(targetDate);
-            if (day != null){
-                try{
-                    float currAverage = day.getAveragePrice(productID);
-                    if (currAverage != -1){
-                        average += currAverage;
-                        counter++;
+        try {
+            for (int i = 0; i <= limit; i++) {
+                LocalDate targetDate = daySnapshot.minusDays(i);
+                WorkDay day = getDay(targetDate);
+                if (day != null) {
+                    try {
+                        float currAverage = day.getAveragePrice(productID);
+                        if (currAverage != -1) {
+                            average += currAverage;
+                            counter++;
+                        }
+                    } finally {
+                        day.endProcessing();
                     }
-                } finally {
-                    day.endProcessing();
                 }
             }
+        }finally {
+            currentDayLock.lock();
+            try {
+                activeThreads--;
+                if (activeThreads == 0) {
+                    canAdvance.signalAll();
+                }
+            } finally {
+                currentDayLock.unlock();
+            }
         }
-        return average / counter;
+        return counter == 0 ? 0.0f : average / counter;
     }
 
     public static float getMaxPrice(int numDays, int productID){
         int limit = Math.min(numDays, d);
+        LocalDate daySnapshot = mostRecentDate;
+
+        currentDayLock.lock();
+        try{
+            while (wantsToAdvance) {
+                canWork.await();
+            }
+            activeThreads++;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return -1;
+        } finally {
+            currentDayLock.unlock();
+        }
+
         float max = 0.0f;
-        for (int i = 0; i <= limit; i++){
-            LocalDate targetDate = mostRecentDate.minusDays(i);
-            WorkDay day = getDay(targetDate);
-            if (day != null){
-                try{
-                    float currMax = day.getHighestPrice(productID);
-                    max = Math.max(currMax, max);
-                } finally {
-                    day.endProcessing();
+        try {
+            for (int i = 0; i <= limit; i++) {
+                LocalDate targetDate = daySnapshot.minusDays(i);
+                WorkDay day = getDay(targetDate);
+                if (day != null) {
+                    try {
+                        float currMax = day.getHighestPrice(productID);
+                        max = Math.max(currMax, max);
+                    } finally {
+                        day.endProcessing();
+                    }
                 }
+            }
+        }finally {
+            currentDayLock.lock();
+            try {
+                activeThreads--;
+                if (activeThreads == 0) {
+                    canAdvance.signalAll();
+                }
+            } finally {
+                currentDayLock.unlock();
             }
         }
         return max;
@@ -258,11 +410,7 @@ public class SalesManager {
     }
 
 
-    public WorkDay getCurrentDay(){
-        return workDaysCache.get(mostRecentDate);
-    }
-
-    // Excluindo o dia atual
+    // Excluindo o dia atual ja nao da para utilizar por causa da snapshot que tem que ser feita antes do await
     public static List<WorkDay> getLastDays(int numDays){
         return  workDaysCache
                 .subMap(mostRecentDate.minusDays(numDays), mostRecentDate.minusDays(1))

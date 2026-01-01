@@ -5,12 +5,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AuthenticationManager {
-    private final HashMap<String, User> registeredUsers = new HashMap<>();
+    private static final HashMap<String, User> registeredUsers = new HashMap<>();
 
     // ClientID, User logged in
-    private final HashMap<Integer, User> loggedInUsers = new HashMap<>();
+    private static final HashMap<Integer, User> loggedInUsers = new HashMap<>();
 
-    private final Lock readLock = new ReentrantLock();
+    private static final Lock readLock = new ReentrantLock();
     private final Lock writeLock = new ReentrantLock();
 
     public boolean userExists(String username){
@@ -22,11 +22,11 @@ public class AuthenticationManager {
         }
     }
 
-    public boolean registerUser(String username, String password){
+    public boolean registerUser(String username, String password, boolean isAdmin){
         if (userExists(username)) return false;
         writeLock.lock();
         try{
-            registeredUsers.put(username, new User(username, password));
+            registeredUsers.put(username, new User(username, password, isAdmin));
             return true;
         } finally {
             writeLock.unlock();
@@ -43,11 +43,23 @@ public class AuthenticationManager {
         return false;
     }
 
-    public User getUser(String username){
+    public static User getUser(String username){
         readLock.lock();
         try{
             return registeredUsers.get(username);
         } finally {
+            readLock.unlock();
+        }
+    }
+
+    public static boolean isUserAdmin(int clientID){
+        readLock.lock();
+        try{
+            User u = loggedInUsers.get(clientID);
+            if(u.getIsAdmin() == true){
+                return true;
+            }else return false;
+        }finally {
             readLock.unlock();
         }
     }

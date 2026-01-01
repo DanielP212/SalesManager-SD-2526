@@ -176,6 +176,17 @@ A interface proporcionada ao cliente facilita a realização de operações, mos
 O servidor armazena em disco todos os dados necessários para o seu funcionamento.
 Após ser iniciado, este tem sempre uma thread à espera que clientes façam a conexão através da socket TCP, após um cliente se conectar é criada uma thread que irá controlar a socket de conexão com esse cliente, recebendo pedidos e enviando a sua resposta.
 
+\subsection{Avanço de Dia e Barreiras de Sincronização}
+Para permitir que no pedido de avanço de dia enquanto o servidor ainda processa queries anteriores, não efetue queries emediatamente após serem solicitado após um administrador pretender avançar implementámos dois tipos de barreira de threads. Uma na funçao avançar o dia que aguarda que o contador de threads ativas chegue a zero e torna a flag \emph{wantsToAdvance} verdadeira, e outra em cada querie e registo de venda para que não permita fazer mais operações até o dia ser avançado (as operações solicitadas em certo dia mesmo que o dia avance serão relativas ao dia antes de avançar). No início de cada querie e registo  após passar a barreia o numero de threads ativas é incrementado e no final das operações decrementado, quando decrementado é tambem verificado se esta variável é 0 pois caso isto se verifique a condição para avançar o dia é sinalizada (\emph{signalAll} pois mais que um admin pode pedir um avanço).
+
+
+\subsection{Granular Locking no Registo}
+Diferenciamos o acesso lógico (quem pode trabalhar) do acesso físico (quem pode escrever no ficheiro). Utilizamos doiss locks distintas para evitar bloqueios desnecessários:
+\begin{itemize}
+    \item \emph{currentDayLock}: Gere a barreira de entrada e o estado de avanço do dia.
+    \item \emph{writerLock}: Garante que a escrita de cada venda para o disco não é sobreposta.
+\end{itemize}
+
 \subsection{Pedidos}
 Após um cliente se conectar ao servidor este necessita, obrigatoriamente, de realizar um pedido de \emph{login}, apenas após este será dado um identificador único ao cliente, que o deixará realizar pedidos.
 
@@ -222,9 +233,9 @@ Esta estrutura contém também operações necessárias para realizar cálculos 
 \subsection{Memória e Cache}
 Admitindo a escalabilidade da aplicação, não é viável manter tudo em memória, deste modo implementamos um sistema de persistência para que os dados possam ser armazenados em disco. Quando um dia é requisitado para alguma ação no servidor, verifica-se este está presente em memória num \emph{TreeMap} (implementação da interface Map ordenada por chave). A escolha desta estrutura deve-se à conveniência das chaves ordenadas dado que se tratam de datas que normalmente vão ser acessadas sequencialmente.
 Dado que o servidor encontra o dia que procura em cache, incrementa a quantidade de leitores ativos daquele dia e retorna o dia, é importante destacar a utilização de um \emph{ReadWriteLock} especificamente para manipular a cache de forma concorrente e manter os \emph{locks} granulares.
-Caso o servidor não encontre, vai ser efetuado uma procura de um ficheiro \emph{ValorDoLocalDate.dat} específico do dia em questão (adicionado na inicialização de cada dia e atualizado com dados em cada avanço de dia), se este não existir a pesquisa pelos dados do dia é terminada com \emph{null}, senão, este ficheiro vai ser lido e os dados vão ser extraídos.
+Caso o servidor não encontre, vai ser efetuado uma procura de um ficheiro \emph{ValorDoLocalDate.dat} específico do dia em questão (adicionado na inicialização de cada dia e atualizado com dados em cada registro de venda), se este não existir a pesquisa pelos dados do dia é terminada com \emph{null}, senão, este ficheiro vai ser lido e os dados vão ser extraídos.
 
-Os dados extraídos são relevantes para ser reutilizados logo o servidor pretende guardá-los na cache então caso esta esteja cheia (determinado pela quantidade de dias guardados até S dias, variável definida na inicialização do programa) o servidor vai verificar se é possível retirar algum dia da cache do dia mais antigo até o mais recente, verificando em cada um o número de leitores ativos que esse dia tem, sendo apenas possível remover dias com 0 leitores ativos (no fim de cada \emph{querie} que utiliza certo dia, deve decrementar este valor). No sucesso de libertação da cache, o dia extraído é guardado, o número de leitores incrementado e retornado. Na falha de libertação de cache este irá ser processado sem o envolvimento da cache. Nestes processo de escrita na cache foi utilizado o \emph{WriteLock} da cache para proteger estes dados do envolvimento de mais \emph{threads}.
+Os dados extraídos são relevantes para ser reutilizados, logo o servidor pretende guardá-los na cache, então caso esta esteja cheia (determinado pela quantidade de dias guardados até S dias, variável definida na inicialização do programa) o servidor vai verificar se é possível retirar algum dia da cache do dia mais antigo até o mais recente, verificando em cada um o número de leitores ativos que esse dia tem, sendo apenas possível remover dias com 0 leitores ativos (no fim de cada \emph{querie} que utiliza certo dia, deve decrementar este valor). No sucesso de libertação da cache, o dia extraído é guardado, o número de leitores incrementado e retornado. Na falha de libertação de cache este irá ser processado sem o envolvimento da cache. Nestes processo de escrita na cache foi utilizado o \emph{WriteLock} da cache para proteger estes dados do envolvimento de mais \emph{threads}.
 
 
 \end{document}

@@ -39,6 +39,7 @@ public class MenuAction implements MenuItem{
             case NOTIFY_SEQ -> NOTIFY_SEQ();
             case NOTIFY_CONC -> NOTIFY_CONQ();
             case FILTER -> FILTER();
+            case ADVANCE_DAY -> ADVANCE_DAY();
             case null, default -> null;
         };
     }
@@ -190,5 +191,10 @@ public class MenuAction implements MenuItem{
 
         return InputHandler.handle(mainMenu.getClientId(), type, array);
 
+    }
+
+    private  Packet ADVANCE_DAY(){
+        byte[] array = new byte[0];
+        return InputHandler.handle(mainMenu.getClientId(), type, array);
     }
 }

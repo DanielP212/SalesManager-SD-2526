@@ -20,7 +20,7 @@ public class RegisterRequest extends Request {
     public byte[] execute() {
         if (requesterClient == -1) return null;
 
-        boolean successfulRegister = Server.authHandler.registerUser(username, password);
+        boolean successfulRegister = Server.authHandler.registerUser(username, password, false);
         if (successfulRegister) return new byte[]{0x01};
         else return new byte[]{0x00};
     }

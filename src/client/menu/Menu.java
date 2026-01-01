@@ -36,6 +36,7 @@ public class Menu implements MenuItem{
         items.add(new MenuAction("Adicionar Notificação Seq", PacketType.NOTIFY_SEQ));
         items.add(new MenuAction("Adicionar Notificação Conq", PacketType.NOTIFY_CONC));
         items.add(new MenuAction("Eventos de Multiplos Produtos", PacketType.FILTER));
+        items.add(new MenuAction("Avançar dia", PacketType.ADVANCE_DAY));
     }
 
     public String getTitle(){ return title; }

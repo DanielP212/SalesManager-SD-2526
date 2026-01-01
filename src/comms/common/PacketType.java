@@ -11,7 +11,8 @@ public enum PacketType {
     CREATE_PRODUCT,
     NOTIFY_SEQ,
     NOTIFY_CONC,
-    FILTER;
+    FILTER,
+    ADVANCE_DAY;
 
     public static PacketType fromByte(byte b){
         return switch (b){
@@ -26,6 +27,7 @@ public enum PacketType {
             case 0x08 -> NOTIFY_SEQ;
             case 0x09 -> NOTIFY_CONC;
             case 0x10 -> FILTER;
+            case 0x11 -> ADVANCE_DAY;
             default -> null;
         };
     }
@@ -43,6 +45,7 @@ public enum PacketType {
             case NOTIFY_SEQ -> 0x08;
             case NOTIFY_CONC -> 0x09;
             case FILTER -> 0x10;
+            case ADVANCE_DAY -> 0x11;
         };
     }
 }
