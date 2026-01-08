@@ -13,6 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Client implements Runnable {
     private static final int NOT_LOGGED_ID = -1;
     private int id = NOT_LOGGED_ID; // MUDAR para qualquer cena para nao ter de dar login
+    private InputStream input;
 
     private boolean isTestInstance = false;
     DataInputStream userInput = null;
@@ -25,28 +26,31 @@ public class Client implements Runnable {
     Lock busyLock = new ReentrantLock();
     Lock freeLock = new ReentrantLock();
 
-    public Client(){;}
+    public Client(){
+        this.input = System.in;
+    }
 
     // Para UnitTests
     public Client(InputStream systemIn, PrintStream testOut, int clientID){
         isTestInstance = true;
         this.testOutput = testOut;
-        System.setIn(systemIn);
+        this.input = systemIn;
         id = clientID;
     }
 
     public void run(){
         try {
             Socket socket = new Socket("localhost", 12345);
-            userInput = new DataInputStream(System.in);
+            userInput = new DataInputStream(input);
             connectionThread = new ClientConnectionThread(this, socket);
             connectionThread.start();
             Menu mainMenu = new Menu("Main", userInput, this);
             while(true){
                 Packet p;
                 if (isTestInstance){
-                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                    BufferedReader in = new BufferedReader(new InputStreamReader(input));
                     String input = in.readLine();
+                    if (input == null) return;
                     System.out.println("Received input: " + input.trim());
                     if (input.trim().equals("quit")) return;
                     p = InputHandler.handle(id, input.trim());

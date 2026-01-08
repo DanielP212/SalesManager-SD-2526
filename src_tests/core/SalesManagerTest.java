@@ -30,16 +30,47 @@ class SalesManagerTest {
         TestManager.init();
     }
 
-    @AfterEach
-    void tearDown(){
-        for (ClientInstance c : activeClients ){
-            c.stop();
-        }
-        activeClients.clear();
-    }
+
 
     @Test
     void registerSale() {
+    }
+
+    @Test
+    void clientTests() throws FileNotFoundException {
+        int threads = 100;
+        ClientInstance[] cInstances = new ClientInstance[threads];
+        String[] inputs = {
+                "query_qtd B 10",
+                "query_max C 5",
+                "query_avg B 2",
+                "query_qtd C 6"};
+        float[] expected = {
+                (float)SalesManager.getSoldQuantity(10, 2),
+                SalesManager.getMaxPrice(5, 3),
+                SalesManager.getAveragePrice(2, 2),
+                SalesManager.getSoldQuantity(6, 3)
+                };
+
+        try {
+            for (int i = 0; i < threads; i++){
+                cInstances[i] = spawnClient();
+            }
+            AtomicInteger counter = new AtomicInteger(0);
+            ConcurrencyTestHelper.runConcurrently(threads, () -> {
+                int i = counter.getAndIncrement();
+                for (int j = 0; j < inputs.length; j++){
+                    float expectedResult = expected[j];
+                    System.out.println(expectedResult);
+                    String result = cInstances[i].sendInput(inputs[j]);
+                    assertNotNull(result);
+                    assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
+                }
+                cInstances[i].stop();
+            });
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

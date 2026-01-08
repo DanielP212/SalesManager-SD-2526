@@ -19,6 +19,7 @@ public class RequestHandlerThread extends Thread {
         this.clientID = clientID;
         this.conn = conn;
         this.receivedPacket = p;
+        System.out.println("Created thread to handle packet " + p.getID() + " from client " + clientID);
     }
 
     public void run(){

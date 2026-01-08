@@ -13,6 +13,7 @@ public class ClientHandlerThread extends Thread{
     public ClientHandlerThread(int clientID, Socket s){
         this.clientID = clientID;
         this.conn = new Connection(s);
+        System.out.println("Created thread to handle client with ID " + clientID);
     }
 
     public void run(){
