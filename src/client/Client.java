@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Client implements Runnable {
     private static final int NOT_LOGGED_ID = -1;
-    private int id = NOT_LOGGED_ID; // MUDAR para qualquer cena para nao ter de dar login
+    private int id = NOT_LOGGED_ID; // MUDAR para qualquer numero para nao ter de dar login
     private InputStream input;
 
     private boolean isTestInstance = false;

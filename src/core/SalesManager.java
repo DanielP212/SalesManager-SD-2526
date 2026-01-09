@@ -465,4 +465,14 @@ public class SalesManager {
         }
     }
 
+    // para testes
+    public static int getCacheSize(){
+        cacheLock.readLock().lock();
+        try{
+            return workDaysCache.size();
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+    }
 }
