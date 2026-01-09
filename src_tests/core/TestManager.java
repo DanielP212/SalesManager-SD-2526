@@ -13,42 +13,41 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class TestManager {
-    private static final int s = 5;
-    private static final int d = 9;
+    private static final int s = 89;
+    private static final int d = 90;
     private static int CLIENT_ID_COUNTER = 1;
 
     private static final int PRODUCT_NUMBER = 5;
-    private static final Map<LocalDate, WorkDay> days = new HashMap<>();
 
     private static Thread serverThread;
     private static List<Client> clients = new ArrayList<>();
 
     private static boolean initialized = false;
+    private static int databaseEntries;
 
     public static void init(){
         if (initialized) return;
-        int nFiles = 10;
+        int nFiles = d;
         Random random = new Random();
         LocalDate today = LocalDate.now();
         FileCreator.cleanupOldFiles();
-        int[] id2Quantities = {5, 1, 3, 1, 7};
-        float[] id2Prices = {100, 99, 60.1f, 157.5f, 70};
-        int[] id3Quantities = {1, 100, 34, 965};
-        float[] id3Prices = {2, 500, 30, 45};
+        int iters = 10000;
+
 
         for(int i = 1; i < nFiles ; i++){
             LocalDate targetDate = today.minusDays(i);
-            for (int j = 0; j < id2Quantities.length; j++){
-                FileCreator.createFile(targetDate, 2, id2Quantities[j], id2Prices[j]);
+            for (int j = 0; j < iters; j++){
+                FileCreator.createFile(targetDate, 2,
+                        random.nextInt(1, 342),
+                        random.nextFloat(1.0f, 100.0f)); // Produto com nome B
             }
-            for (int j = 0; j < id3Quantities.length; j++){
-                FileCreator.createFile(targetDate, 3, id3Quantities[j], id3Prices[j]);
+            for (int j = 0; j < iters; j++){
+                FileCreator.createFile(targetDate, 3,
+                        random.nextInt(1, 255),
+                        random.nextFloat(1.0f, 100.0f)); // Product com nome C
             }
-
-            WorkDay day = SalesManager.loadDayFromFile(targetDate,
-                    new File(targetDate.toString() + ".dat"));
-            days.put(targetDate, day);
         }
+        databaseEntries = nFiles * iters * 2;
 
         serverThread = new Thread(new Server(12345, s, d));
         serverThread.start();
@@ -62,5 +61,11 @@ public class TestManager {
         clients.add(client);
         return client;
     }
+    public static int getNumDBEntries(){
+        return databaseEntries;
+    }
+
+    public static int getD(){ return d; }
+    public static int getS(){ return s; }
 
 }

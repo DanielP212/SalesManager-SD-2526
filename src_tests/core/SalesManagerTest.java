@@ -7,6 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.sql.Time;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -38,36 +40,53 @@ class SalesManagerTest {
 
     @Test
     void clientTests() throws FileNotFoundException {
-        int threads = 100;
+        int threads = 26;
+        int requestIters = 4;
         ClientInstance[] cInstances = new ClientInstance[threads];
         String[] inputs = {
-                "query_qtd B 10",
-                "query_max C 5",
-                "query_avg B 2",
-                "query_qtd C 6"};
-        float[] expected = {
-                (float)SalesManager.getSoldQuantity(10, 2),
-                SalesManager.getMaxPrice(5, 3),
-                SalesManager.getAveragePrice(2, 2),
-                SalesManager.getSoldQuantity(6, 3)
-                };
+                "query_qtd B 20",
+                "query_max C 50",
+                "query_avg B 20",
+                "query_qtd C 66"};
 
+        float[] expected = {
+                (float)SalesManager.getSoldQuantity(20, 2),
+                SalesManager.getMaxPrice(50, 3),
+                SalesManager.getAveragePrice(20, 2),
+                SalesManager.getSoldQuantity(66, 3)
+                };
         try {
             for (int i = 0; i < threads; i++){
                 cInstances[i] = spawnClient();
             }
             AtomicInteger counter = new AtomicInteger(0);
+
+            long start = System.nanoTime();
             ConcurrencyTestHelper.runConcurrently(threads, () -> {
                 int i = counter.getAndIncrement();
-                for (int j = 0; j < inputs.length; j++){
-                    float expectedResult = expected[j];
-                    System.out.println(expectedResult);
-                    String result = cInstances[i].sendInput(inputs[j]);
-                    assertNotNull(result);
-                    assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
+                for (int iter = 0; iter < requestIters; iter++){
+                    for (int j = 0; j < inputs.length; j++){
+                        float expectedResult = expected[j];
+                        System.out.println(expectedResult);
+                        String result = cInstances[i].sendInput(inputs[j]);
+                        assertNotNull(result);
+                        assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
+                    }
                 }
                 cInstances[i].stop();
             });
+            for (ClientInstance cInstance : cInstances) {
+                cInstance.thread.join();
+            }
+            long end = System.nanoTime();
+            int totalRequests = threads * (inputs.length * requestIters);
+            long totalTime = (end - start) / 1000000;
+            double requestPSec = (double) totalRequests / ((double) totalTime / 1000);
+            System.out.printf("Finished %d requests from %d clients in %d ms%n", totalRequests, threads, totalTime);
+            System.out.printf("Throughput: %.2f Req/Sec%n", requestPSec);
+            //System.out.printf("Final cache size %d%n", SalesManager.getCacheSize());
+            System.out.printf("Ran with %d entries on %d days with max cache size %d",
+                    TestManager.getNumDBEntries(), TestManager.getD(), TestManager.getS());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -218,7 +237,7 @@ class SalesManagerTest {
         String sendInput(String input) {
             writer.println(input);
             long startTime = System.currentTimeMillis();
-            long timeout = 2000;
+            long timeout = 10000;
 
             try {
                 while (System.currentTimeMillis() - startTime < timeout) {
