@@ -119,8 +119,42 @@ Os pedidos de filtros são pedidos que dado um conjunto de itens e um dia anteri
 \texttt{METER EXEMPLO DE COMO OS DADOS SAO RETORNADOS AQUI}
 
 \subsection{Notificações}
-\texttt{AINDA NAO IMPLEMENTADO!}
+A implementação das notificações de vendas envolve uma comunicação assíncrona onde o cliente solicita a monitorização de uma notificação e o servidor gere o estado e a lógica de espera.
 
+\subsubsection{Notificações Sequenciais}
+
+Notificar cliente após o sucesso ou insucesso na venda conssecutiva de dois produtos p1 e p2.
+
+\begin{itemize}
+
+    \item \textbf{Instanciação do Pedido no Servidor:} O servidor recebe o \texttt{Packet} do cliente. Uma \textit{thread} de gestão de pedidos analisa o tipo de pacote. Ao identificar o tipo \texttt{NOTIFY\_SEQ}, instancia um objeto \texttt{NotifySeqRequest}, passando o \textit{array} de bytes do pacote para o seu construtor. Este objeto \texttt{NotifySeqRequest} representa o pedido específico do cliente e é colocado numa fila para ser processado.
+
+    \item \textbf{Execução e Espera:} Uma \textit{worker thread} do servidor executa o método \texttt{execute()} do objeto \texttt{NotifySeqRequest}. Este método primeiro desserializa os nomes dos produtos. De seguida, regista o interesse na venda desses produtos no \texttt{WorkDay} atual. Este registo é feito adicionando instâncias de \texttt{SeqSaleNotification} a um \texttt{Map} (o campo \texttt{seqWaiting} na classe \texttt{WorkDay}), que mapeia o ID de um produto ao seu objeto de notificação correspondente. Após o registo, a \textit{worker thread} bloqueia a sua execução ao invocar \texttt{await()} numa \texttt{Condition} pertencente ao \texttt{SeqSaleNotification} do primeiro produto.
+
+    \item \textbf{Evento de Venda e Sinalização:} Quando uma venda é processada através do método \texttt{addSale} da classe \texttt{WorkDay}, este verifica no mapa se existe uma notificação pendente para o produto vendido. Em caso afirmativo, atualiza o estado do \texttt{SeqSaleNotification} e invoca \texttt{signalAll()} na sua \texttt{Condition}.
+
+    \item \textbf{Lógica Sequencial e Conclusão:} A chamada a \texttt{signalAll()} "acorda" a \textit{worker thread} que estava em espera. A lógica no método \texttt{execute()} prossegue, e a \textit{thread} passa a bloquear novamente, desta vez na \texttt{Condition} do segundo produto. Quando o segundo produto é vendido e a sua \texttt{Condition} é sinalizada, a execução do pedido é concluída com sucesso.
+
+    \item \textbf{Resposta ao Cliente:} Após a conclusão (seja com sucesso ou pelo término do dia de trabalho), a \textit{worker thread} gera uma resposta, que é enviada de volta ao cliente dentro de um novo \texttt{Packet}. O cliente, ao receber este pacote, utiliza a classe \texttt{NotificationSeqAnswer} para interpretar a resposta e apresentar o resultado ao utilizador.
+\end{itemize}
+
+É importante notar que, para garantir que nenhuma \textit{worker thread} fique bloqueada indefinidamente, existe um mecanismo de final de dia. Quando o \texttt{WorkDay} é fechado, o método \texttt{close()} invoca \texttt{signalAll()} em todas as \texttt{Conditions} pendentes. Isto acorda todas as \textit{threads} em espera, que então verificam que o dia terminou e encerram a sua execução, notificando os respetivos clientes da falha do pedido.
+
+\subsubsection{Notificações Concorrentes}
+
+Notificar cliente após sucesso ou insucesso na venda de um qualquer produto P, N vezes conssecutivas, retornando o nome de P em caso de sucesso.
+
+\begin{itemize}
+    \item \textbf{Instanciação do Pedido no Servidor:} O servidor recebe o \texttt{Packet} do cliente e uma \textit{thread} de gestão analisa o seu conteúdo. Ao identificar o tipo \texttt{NOTIFY\_CONC}, o sistema instancia um objeto \texttt{NotifyConcRequest}, passando o \textit{array} de bytes do pacote para o construtor. Este objeto, que representa o pedido específico, é colocado numa fila de processamento.
+
+    \item \textbf{Gestão no Servidor:} Ao processar o pedido, a classe \texttt{WorkDay} verifica se já existe uma instância de \texttt{ConcSaleNotification} associada à chave $N$ (o número de vendas consecutivas solicitado). Se não existir, cria uma nova; caso contrário, reutiliza a instância existente. Este objeto armazena o valor $N$ e o nome do produto que satisfez a condição (inicialmente \texttt{null}). Todos os pedidos são guardados num \texttt{HashMap} que mapeia o valor $N$ à respetiva \texttt{ConcSaleNotification}.
+
+    \item \textbf{Lógica de Verificação:} A validação ocorre a cada nova venda, através do método \texttt{addSale}. A classe \texttt{WorkDay} mantém um contador de vendas consecutivas e o registo do último produto vendido. Se a nova venda for do mesmo produto que a anterior, o contador é incrementado; caso contrário, reinicia com valor 1. Após esta atualização, o sistema verifica se existe alguma entrada no mapa correspondente ao valor atual do contador e, em caso afirmativo, sinaliza todas as \textit{threads} que estejam à espera no objeto \texttt{ConcSaleNotification} associado.
+
+    \item \textbf{Condição Satisfeita:} Uma vez acordada ("desbloqueada"), a \textit{worker thread} verifica no objeto \texttt{ConcSaleNotification} se a condição foi efetivamente satisfeita (isto é, se o nome do produto é diferente de \texttt{null}). Confirmando-se a condição, o servidor envia uma \texttt{NotificationConcAnswer} ao cliente com os dados da venda. Se não existirem mais \textit{threads} à espera neste objeto, a entrada correspondente é removida do mapa.
+
+    \item \textbf{Fim do Dia:} Caso o dia de trabalho termine (mediante a chamada ao método \texttt{endWorkDay}), todas as \textit{threads} com pedidos de notificação concorrente ainda pendentes são acordadas. Estas verificam o fecho do dia e notificam os respetivos clientes de que o pedido foi cancelado.
+\end{itemize}
 
 \section{Pacotes}
 Um pacote, definido em \texttt{Packet.java} é uma estrutura geral para enviar informação entre cliente e servidor.
