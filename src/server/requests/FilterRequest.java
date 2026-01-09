@@ -22,7 +22,7 @@ public class FilterRequest extends Request{
         this.buffer = ByteBuffer.wrap(data);
         int daysBefore = buffer.getInt();
         if (daysBefore == 0) date = null;
-        else this.date = LocalDate.now().minusDays(daysBefore);
+        else this.date = SalesManager.getCurWorkDay().getDate().minusDays(daysBefore);
         productsQueried = Encodable.readStringArray(buffer);
     }
 

@@ -26,15 +26,21 @@ public class Connection {
 
     public Packet receive() throws IOException {
         readLock.lock();
-        int packetSize = in.readInt();
-        byte[] buf = new byte[packetSize];
-        int bytesRead = in.read(buf);
-        readLock.unlock();
-        if (bytesRead != packetSize - 4){
-            System.out.println("[WARNING] Read different bytes(" + bytesRead + ") from packet size told on header. Is this intended?");
-            return null;
+        try{
+            int packetSize = in.readInt();
+            byte[] buf = new byte[packetSize];
+            int bytesRead = in.read(buf);
+            if (bytesRead != packetSize - 4){
+                System.out.println("[WARNING] Read different bytes(" + bytesRead + ") from packet size told on header. Is this intended?");
+                return null;
+            }
+            return new Packet(packetSize, buf);
+        } catch (EOFException e){
+            close();
+            throw e;
+        } finally {
+            readLock.unlock();
         }
-        return new Packet(packetSize, buf);
     }
 
 
@@ -46,16 +52,11 @@ public class Connection {
     }
 
     public void close(){
-        readLock.lock();
-        writeLock.lock();
         try{
-            socket.close();
-            readLock.unlock();
-            writeLock.unlock();
+            if (socket != null && !socket.isClosed()){
+                socket.close();
+            }
         } catch (IOException e) {
-            readLock.unlock();
-            writeLock.unlock();
-            throw new RuntimeException(e);
         }
     }
 

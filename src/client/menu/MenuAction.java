@@ -40,8 +40,12 @@ public class MenuAction implements MenuItem{
             case NOTIFY_CONC -> NOTIFY_CONQ();
             case FILTER -> FILTER();
             case ADVANCE_DAY -> ADVANCE_DAY();
-            case null, default -> null;
+            case null, default -> quit();
         };
+    }
+
+    private Packet quit(){
+        return null;
     }
 
     private String readInput(int maxSize){

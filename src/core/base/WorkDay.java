@@ -186,24 +186,39 @@ public class WorkDay {
         }
     }
 
-    public void close(){ 
+    public void close() {
         this.closedLock.writeLock().lock();
-        this.closed = true;
-        this.closedLock.writeLock().unlock();
-
+        try {
+            this.closed = true;
+        } finally {
+            this.closedLock.writeLock().unlock();
+        }
         concNLock.lock();
-        for (Integer n : concWaiting.keySet()) {
-            concWaiting.get(n).cond.signalAll();
+        try {
+            for (ConcSaleNotification cn : concWaiting.values()) {
+                cn.notLock.lock();
+                try {
+                    cn.cond.signalAll();
+                } finally {
+                    cn.notLock.unlock();
+                }
+            }
+        } finally {
+            concNLock.unlock();
         }
-
         seqNLock.lock();
-        for (Integer pID : seqWaiting.keySet()) {
-            seqWaiting.get(pID).cond.signalAll();
+        try {
+            for (SeqSaleNotification sn : seqWaiting.values()) {
+                sn.notLock.lock();
+                try {
+                    sn.cond.signalAll();
+                } finally {
+                    sn.notLock.unlock();
+                }
+            }
+        } finally {
+            seqNLock.unlock();
         }
-
-        seqNLock.unlock();
-        concNLock.unlock();
-
     }
 
     public LocalDate getDate(){ return date; }

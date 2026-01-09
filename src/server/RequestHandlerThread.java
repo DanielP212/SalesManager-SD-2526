@@ -53,7 +53,6 @@ public class RequestHandlerThread extends Thread {
                 try {
                     hasRequest.await();
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
             }
             if (!running) return;

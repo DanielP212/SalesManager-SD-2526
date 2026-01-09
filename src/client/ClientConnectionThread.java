@@ -37,7 +37,6 @@ public class ClientConnectionThread extends Thread{
                 monitor.complete(received);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -62,4 +61,8 @@ public class ClientConnectionThread extends Thread{
     public void assignClientID(int assignedID){ parentClient.assignID(assignedID); }
     public boolean isTestConnection(){ return parentClient.isTestInstance(); }
     public PrintStream getTestOut(){ return parentClient.getTestOutput(); }
+
+    public void quit(){
+        conn.close();
+    }
 }

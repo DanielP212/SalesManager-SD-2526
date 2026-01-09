@@ -45,11 +45,11 @@ public class Server implements Runnable{
 
     // Inicializacao das coisas para testes
     public void init(){
-        authHandler.registerUser("mamaco", "preto", true);
-        SalesManager.createProduct("A", 15.0f);
-        SalesManager.createProduct("B", 15.0f);
-        SalesManager.createProduct("C", 15.0f);
-        SalesManager.createProduct("D", 15.0f);
+        authHandler.registerUser("admin", "admin", true);
+        SalesManager.createProduct("Ananas", 15.0f);
+        SalesManager.createProduct("Banana", 15.0f);
+        SalesManager.createProduct("Coco", 15.0f);
+        SalesManager.createProduct("Donut", 15.0f);
     }
 
     public static void stopTracking(ClientHandlerThread c){

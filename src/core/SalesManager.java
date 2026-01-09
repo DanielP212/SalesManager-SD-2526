@@ -128,6 +128,7 @@ public class SalesManager {
                 currentWorkDay.close();
 
                 LocalDate nextDay = mostRecentDate.plusDays(1);
+                mostRecentDate = nextDay;
                 initCurrentDay(nextDay);
 
                 System.out.println("Dia avançado para: " + nextDay);
@@ -220,6 +221,7 @@ public class SalesManager {
         int total = 0;
         int limit = Math.min(numDays, d);
         LocalDate daySnapshot = mostRecentDate;
+        System.out.println(daySnapshot);
 
         currentDayLock.lock();
         try{

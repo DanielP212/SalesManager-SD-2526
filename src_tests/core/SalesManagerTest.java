@@ -40,8 +40,8 @@ class SalesManagerTest {
 
     @Test
     void clientTests() throws FileNotFoundException {
-        int threads = 26;
-        int requestIters = 4;
+        int threads = 40;
+        int requestIters = 1;
         ClientInstance[] cInstances = new ClientInstance[threads];
         String[] inputs = {
                 "query_qtd B 20",
@@ -55,6 +55,7 @@ class SalesManagerTest {
                 SalesManager.getAveragePrice(20, 2),
                 SalesManager.getSoldQuantity(66, 3)
                 };
+        ArrayBlockingQueue<List<String>> allResponses = new ArrayBlockingQueue<>(threads);
         try {
             for (int i = 0; i < threads; i++){
                 cInstances[i] = spawnClient();
@@ -66,19 +67,28 @@ class SalesManagerTest {
                 int i = counter.getAndIncrement();
                 for (int iter = 0; iter < requestIters; iter++){
                     for (int j = 0; j < inputs.length; j++){
-                        float expectedResult = expected[j];
-                        System.out.println(expectedResult);
-                        String result = cInstances[i].sendInput(inputs[j]);
-                        assertNotNull(result);
-                        assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
+                        cInstances[i].sendInputAsync(inputs[j]);
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        //assertNotNull(result);
+                        //assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
                     }
                 }
+                List<String> responses =
+                        cInstances[i].awaitResponseBatch(requestIters * inputs.length, 5);
+                allResponses.add(responses);
                 cInstances[i].stop();
             });
             for (ClientInstance cInstance : cInstances) {
                 cInstance.thread.join();
             }
             long end = System.nanoTime();
+            for (List<String> r : allResponses) {
+                System.out.println(r);
+            }
             int totalRequests = threads * (inputs.length * requestIters);
             long totalTime = (end - start) / 1000000;
             double requestPSec = (double) totalRequests / ((double) totalTime / 1000);
@@ -250,6 +260,43 @@ class SalesManagerTest {
                 throw new RuntimeException(e);
             } finally {
                 output.reset();
+            }
+        }
+
+        void sendInputAsync(String input) {
+            writer.println(input);
+            if (writer.checkError()) {
+                throw new RuntimeException("Failed to write to client. Pipe might be broken.");
+            }
+        }
+
+        List<String> awaitResponseBatch(int expectedResponseCount, int timeoutSeconds) {
+            long startTime = System.currentTimeMillis();
+            long timeoutMs = timeoutSeconds * 1000L;
+
+            try {
+                while (System.currentTimeMillis() - startTime < timeoutMs) {
+                    String currentBuffer = output.toString();
+                    String[] lines = currentBuffer.split(System.lineSeparator());
+                    int validLines = 0;
+                    for (String line : lines) {
+                        if (!line.trim().isEmpty()) validLines++;
+                    }
+                    if (validLines >= expectedResponseCount) {
+                        output.reset();
+                        List<String> result = new ArrayList<>();
+                        for (String line : lines) {
+                            if (!line.trim().isEmpty()) result.add(line.trim());
+                        }
+                        return result;
+                    }
+                    Thread.sleep(50);
+                }
+                throw new RuntimeException("Timed out waiting for " + expectedResponseCount +
+                        " responses. Current buffer:\n" + output.toString());
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 

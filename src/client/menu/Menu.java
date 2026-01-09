@@ -37,6 +37,7 @@ public class Menu implements MenuItem{
         items.add(new MenuAction("Adicionar Notificação Conq", PacketType.NOTIFY_CONC));
         items.add(new MenuAction("Eventos de Multiplos Produtos", PacketType.FILTER));
         items.add(new MenuAction("Avançar dia", PacketType.ADVANCE_DAY));
+        items.add(new MenuAction("Sair", null));
     }
 
     public String getTitle(){ return title; }
@@ -64,7 +65,7 @@ public class Menu implements MenuItem{
     }
 
 
-    private void printMenu(){
+    private void printMenu() {
         System.out.println("------- " + title + "---------");
         for (int i = 0; i < items.size(); i++){
             System.out.println(i + ": " + items.get(i).getTitle());
@@ -76,12 +77,10 @@ public class Menu implements MenuItem{
         System.out.print("Username: ");
         String username = readInput(255);
         if (username == null) return null;
-        System.out.println(username);
 
         System.out.print("Password: ");
         String password = readInput(255);
         if (password == null) return null;
-        System.out.println(password);
 
         byte[] data = InputHandler.inputToBytes(new String[]{"LOGIN",username, password});
         return InputHandler.handle(client.getID(), PacketType.LOGIN, data);

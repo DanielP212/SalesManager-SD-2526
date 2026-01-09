@@ -23,8 +23,7 @@ public class Client implements Runnable {
     List<PendingRequestThread> busyThreads = new LinkedList<>();
     Queue<PendingRequestThread> freeThreads = new LinkedList<>();
 
-    Lock busyLock = new ReentrantLock();
-    Lock freeLock = new ReentrantLock();
+    Lock poolLock = new ReentrantLock();
 
     public Client(){
         this.input = System.in;
@@ -59,8 +58,9 @@ public class Client implements Runnable {
                     p = mainMenu.execute();
                 }
                 if (p == null){
-                    System.out.println("Null packet. Inputs erradas?");
-                    continue;
+                    System.out.println("Adeus!");
+                    shutdown();
+                    return;
                 }
                 // Nao fazer nada enquanto nao estiver loggado
                 if (!isLoggedIn() &&
@@ -77,13 +77,18 @@ public class Client implements Runnable {
                     continue;
                 }
 
-                if (freeThreads.isEmpty()){
-                    PendingRequestThread newThread = new PendingRequestThread(this, connectionThread);
-                    newThread.giveRequest(p);
-                    newThread.start();
-                } else {
-                    PendingRequestThread freeThread = freeThreads.poll();
-                    freeThread.giveRequest(p);
+                poolLock.lock();
+                try{
+                    if (freeThreads.isEmpty()){
+                        PendingRequestThread newThread = new PendingRequestThread(this, connectionThread);
+                        newThread.giveRequest(p);
+                        newThread.start();
+                    } else {
+                        PendingRequestThread freeThread = freeThreads.poll();
+                        freeThread.giveRequest(p);
+                    }
+                } finally {
+                    poolLock.unlock();
                 }
             }
         } catch (IOException e) {
@@ -102,26 +107,32 @@ public class Client implements Runnable {
     public int getID(){ return id; }
 
     public void signalRequestDone(PendingRequestThread thread){
-        busyLock.lock();
-        freeLock.lock();
+        poolLock.lock();
         busyThreads.remove(thread);
         freeThreads.add(thread);
-        busyLock.unlock();
-        freeLock.unlock();
+        poolLock.unlock();
         System.out.println(thread.getName() + " finished a request!");
     }
 
     public void signalRequestStart(PendingRequestThread thread){
-        busyLock.lock();
-        freeLock.lock();
+        poolLock.lock();
         freeThreads.remove(thread);
         busyThreads.add(thread);
         System.out.println("Curr number of threads: " + (busyThreads.size() + freeThreads.size()));
-        busyLock.unlock();
-        freeLock.unlock();
+        poolLock.unlock();
         System.out.println(thread.getName() + " is starting a request");
     }
 
+    public void shutdown(){
+        for (PendingRequestThread t : busyThreads) {
+            t.interrupt();
+        }
+        for (PendingRequestThread t : freeThreads) {
+            t.interrupt();
+        }
+        connectionThread.quit();
+    }
+    
     public boolean isLoggedIn(){ return id != NOT_LOGGED_ID; }
     public boolean isTestInstance() { return isTestInstance; }
     public PrintStream getTestOutput(){ return testOutput; }
