@@ -40,14 +40,14 @@ class SalesManagerTest {
 
     @Test
     void clientTests() throws FileNotFoundException {
-        int threads = 40;
-        int requestIters = 1;
+        int threads = 100;
+        int requestIters = 10;
         ClientInstance[] cInstances = new ClientInstance[threads];
         String[] inputs = {
-                "query_qtd B 20",
-                "query_max C 50",
-                "query_avg B 20",
-                "query_qtd C 66"};
+                "query_qtd Banana 20",
+                "query_max Coco 50",
+                "query_avg Banana 20",
+                "query_qtd Coco 66"};
 
         float[] expected = {
                 (float)SalesManager.getSoldQuantity(20, 2),
@@ -68,11 +68,6 @@ class SalesManagerTest {
                 for (int iter = 0; iter < requestIters; iter++){
                     for (int j = 0; j < inputs.length; j++){
                         cInstances[i].sendInputAsync(inputs[j]);
-                        try {
-                            Thread.sleep(20);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
                         //assertNotNull(result);
                         //assertEquals(Float.parseFloat(result), expectedResult, "Resposta ntem " + expectedResult);
                     }

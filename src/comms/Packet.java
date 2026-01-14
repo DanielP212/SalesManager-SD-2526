@@ -39,7 +39,7 @@ public class Packet extends Encodable {
     public Packet(int packetSize, byte[] buffer){
         super(buffer); // mete os dados do array no bufferIn e cria dataIn
         this.header = new PacketHeader(packetSize, dataIn);
-        dataSize = buffer.length - this.header.headerSize();
+        dataSize = buffer.length - (this.header.headerSize() - 4);
         try {
             this.data = new byte[dataSize];
             int bytesRead = dataIn.read(this.data, 0, dataSize);

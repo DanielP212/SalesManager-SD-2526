@@ -26,24 +26,18 @@ public class Connection {
 
     public Packet receive() throws IOException {
         readLock.lock();
-        try{
+        try {
             int packetSize = in.readInt();
-            byte[] buf = new byte[packetSize];
-            int bytesRead = in.read(buf);
-            if (bytesRead != packetSize - 4){
-                System.out.println("[WARNING] Read different bytes(" + bytesRead + ") from packet size told on header. Is this intended?");
-                return null;
-            }
+            byte[] buf = new byte[packetSize - 4];
+            in.readFully(buf);
             return new Packet(packetSize, buf);
-        } catch (EOFException e){
+        } catch (EOFException e) {
             close();
             throw e;
         } finally {
             readLock.unlock();
         }
     }
-
-
     public void send(Packet p) throws IOException{
         writeLock.lock();
         out.write(p.getBytes());

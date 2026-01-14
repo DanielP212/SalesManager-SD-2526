@@ -44,10 +44,10 @@ public class Client implements Runnable {
             connectionThread = new ClientConnectionThread(this, socket);
             connectionThread.start();
             Menu mainMenu = new Menu("Main", userInput, this);
+            BufferedReader in = new BufferedReader(new InputStreamReader(input));
             while(true){
                 Packet p;
                 if (isTestInstance){
-                    BufferedReader in = new BufferedReader(new InputStreamReader(input));
                     String input = in.readLine();
                     if (input == null) return;
                     System.out.println("Received input: " + input.trim());
