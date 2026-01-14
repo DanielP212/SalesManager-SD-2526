@@ -62,35 +62,49 @@ public class WorkDay {
         if (r) return;
 
         concNLock.lock();
-        if (p.getId() == lastSoldPID){
-            lastSoldPCount++;
-            if(concWaiting.containsKey(lastSoldPCount)){
-                ConcSaleNotification cn = concWaiting.get(lastSoldPCount); 
-                cn.notLock.lock();
-                cn.setPName(p.getName());
-                cn.cond.signalAll();
-                cn.notLock.unlock();
+        try{
+            int startCount;
+            if (p.getId() == lastSoldPID) {
+                startCount = lastSoldPCount;
+            } else {
+                startCount = 0;
+                lastSoldPID = p.getId();
             }
+            int endCount = startCount + quantity;
+            lastSoldPCount = endCount;
+            for (int i = startCount + 1; i <= endCount; i++){
+                if (concWaiting.containsKey(i)){
+                    ConcSaleNotification cn = concWaiting.get(i);
+                    cn.notLock.lock();
+                    try{
+                        cn.setPName(p.getName());
+                        cn.cond.signalAll();
+                    } finally {
+                        cn.notLock.unlock();
+                    }
+                }
+            }
+        } finally {
+            concNLock.unlock();
         }
-        else{
-            lastSoldPCount = 1;
-            lastSoldPID = p.getId();
-        }
-        
-        concNLock.unlock();
+
 
         seqNLock.lock();
-        if(seqWaiting.containsKey(p.getId())){
-            SeqSaleNotification sn = seqWaiting.get(p.getId());
-            sn.notLock.lock();
-            sn.soldProd();
-            sn.cond.signalAll();
-            sn.notLock.unlock();
+        try{
+            if(seqWaiting.containsKey(p.getId())){
+                SeqSaleNotification sn = seqWaiting.get(p.getId());
+                sn.notLock.lock();
+                try{
+                    sn.soldProd();
+                    sn.cond.signalAll();
+                } finally {
+                    sn.notLock.unlock();
+                }
+            }
+        } finally {
+            seqNLock.unlock();
         }
-        seqNLock.unlock();
 
-        
-        
         productLock.writeLock().lock();
         try{
             ProductEntry entry = workdayEntries.get(p.getId());

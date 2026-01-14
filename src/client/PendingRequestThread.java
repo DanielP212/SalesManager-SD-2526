@@ -44,7 +44,8 @@ public class PendingRequestThread extends Thread {
                 try {
                     hasRequest.await();
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println("Closing Request Thread!");
+                    return;
                 }
             }
             requestLock.unlock();

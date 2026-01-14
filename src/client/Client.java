@@ -91,10 +91,8 @@ public class Client implements Runnable {
                     poolLock.unlock();
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Exception Occurred. Are you sure the server is open?");
         }
     }
 
