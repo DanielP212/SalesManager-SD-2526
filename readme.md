@@ -2,7 +2,7 @@
 
 Este é um projeto desenvolvido no âmbito da licenciatura em Engenharia Informática para a cadeira de Sistemas Distribuídos do 3º ano. Consiste num sistema cliente-servidor multithreading distribuído, desenvolvido em Java, para a gestão e análise de transações comerciais em tempo real. O sistema implementa um protocolo aplicacional binário próprio sobre sockets TCP, integrando um controlo estrito de concorrência para garantir consistência dos dados, persistência local otimizada em disco e um sistema assíncrono de notificações assentes no padrão Publisher-Subscriber.
 
-**Para uma descrição completa do projeto consultar o [relatório](relatorio/relatorio.tex)
+**Para uma descrição completa do projeto consultar o [relatório](relatorio/relatorio.tex)**
 
 ---
 
